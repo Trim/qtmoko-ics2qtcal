@@ -7,12 +7,12 @@ do	case "$option" in
 		exit 1;;
 	esac
 done
-shift `expr $OPTIND - 1`
+shift `expr $OPTIND`
 
 icsfile="$1"
 caldb="$2"
 
-if [ -n $icsfile ] && [ -n $caldb ]; then
+if [ -n $icsfile ] || [ -n $caldb ]; then
     echo "Creating temporary copy of $icsfile with valid lines into db $caldb"
     # Create a copy and remove X-MOZ-LASTACK lines that are not understood by Tie::iCal
     grep -v X-MOZ-LASTACK "${icsfile}" >"${icsfile}.tmp"
