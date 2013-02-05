@@ -1,3 +1,4 @@
+#!/bin/sh
 # Interpret command line options
 while getopts v option
 do	case "$option" in
