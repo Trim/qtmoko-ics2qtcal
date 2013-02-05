@@ -16,7 +16,8 @@ cp /home/root/Applications/Qtopia/qtopia_db.sqlite ./qtopia_db.sqlite.bak
 echo "Fetching files"
 for fileurl in $*
 do
-	wget --no-check-certificate --timestamping --user=$user --password=$password $fileurl
+    # We force the output to have .ics extension to simplify next for loop
+	wget --no-check-certificate --timestamping --user="$user" --password="$password" "$fileurl" -O "`basename ${fileurl%%.ics}`.ics"
 done
 
 echo "Deleting appointments of qtopia_db"
@@ -29,7 +30,7 @@ mkdir Annotator-tmp
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
 do
-	./ics2qtcal.sh $verbose $filename /home/root/Applications/Qtopia/qtopia_db.sqlite
+	./ics2qtcal.sh "$verbose" "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
 done;
 echo "Removing existing Note files"
 rm -f /home/root/Applications/Annotator/0-*
