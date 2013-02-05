@@ -31,7 +31,7 @@ perl deleteqtcalappointments.pl /home/root/Applications/Qtopia/qtopia_db.sqlite
 
 echo "Deleting temporary Notes files from a previous execution"
 rm ./Annotator-tmp/*
-mkdir Annotator-tmp
+mkdir -p Annotator-tmp
 
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
