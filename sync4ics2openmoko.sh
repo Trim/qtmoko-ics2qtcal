@@ -5,6 +5,7 @@ do	case "$option" in
 	u)	user="$OPTARG";;
 	p)	password="$OPTARG";;
 	v)	verbose="-v";;
+	s)  server="$OPTARG";;
 	[?])	print >&2 "Usage: $0 [-v] [-u user] [-p password] fileurl1 fileurl2 ..."
 		exit 1;;
 	esac
@@ -18,7 +19,11 @@ echo "Fetching files"
 for fileurl in $*
 do
     # We force the output to have .ics extension to simplify next for loop
-	wget --no-check-certificate --timestamping --user="$user" --password="$password" "$fileurl" -O "`basename ${fileurl%%.ics}`.ics"
+    if [ -z "$server" ]; then
+	    wget --no-check-certificate --timestamping --user="$user" --password="$password" "$fileurl" -O "`basename ${fileurl%%.ics}`.ics"
+	else
+	    wget --no-check-certificate --timestamping --user="$user" --password="$password" "${server}/${fileurl}" -O "`basename ${fileurl%%.ics}`.ics"
+	fi
 done
 
 echo "Deleting appointments of qtopia_db"
