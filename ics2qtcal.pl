@@ -28,7 +28,7 @@ BEGIN {
 
 use DBI;
 use Tie::iCal;
-use Date::ICal;
+use DateTime::Format::ICal;
 use DBD::SQLite;
 use Encode;
 use File::Spec;
@@ -101,7 +101,7 @@ sub extractDateFromIcalLine {
 		else {
 			# It is an end date : it ends just before midnight of the day before
 			my $datemidnight = $date . "T235900";
-			my $icaldate = Date::ICal->new (ical => $datemidnight);
+			my $icaldate = DateTime::Format::ICal->new (ical => $datemidnight);
 			my $icaldateyesterday = $icaldate->add (day => -1);
 			return $icaldateyesterday->ical (localtime => 1);
 		}
@@ -314,7 +314,7 @@ main:
 					elsif ($event->[1]->{RRULE}{'COUNT'} ne '') {
 						my $count = $event->[1]->{RRULE}{'COUNT'};
 						# Compute the ical date corresponding to the start date
-						my $icaldate = Date::ICal->new (ical => extractDateFromIcalLine($event->[1]->{DTSTART},0));
+						my $icaldate = DateTime::Format::ICal->new (ical => extractDateFromIcalLine($event->[1]->{DTSTART},0));
 						my $icallastdateaftercount;
 						if ($repeatrule == 1) {
 							$icallastdateaftercount = $icaldate->add (day => $count-1);
