@@ -23,8 +23,8 @@ if [ -n $icsfile ] && [ -n $caldb ] then
     perl ics2qtcal.pl "$verbose" --ical "${icsfile}-2.tmp" --qtopiadb "$caldb" --notesdirectory "./Annotator-tmp"
 
     echo "Deleting temporary files"
-    rm "${icsfile}.tmp"
-    rm "${icsfile}-2.tmp"
+    rm "./${icsfile}.tmp"
+    rm "./${icsfile}-2.tmp"
 else
     echo "ERROR : unable to treat empty files ! Command was (without options) : \n"
     echo "$0 $*"
