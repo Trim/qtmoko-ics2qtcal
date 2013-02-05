@@ -1,0 +1,32 @@
+v0.1 (2010-09-26)
+first release
+
+v0.2 (2010-10-13)
+- huge performance improvements (x60) on the ical events parsing
+- preliminary support for event descriptions, that must be converted into Notes for QtMoko. However, these descriptions are currently truncated (length not correctly handled) and the encoding is not correctly handled too
+
+v0.3 (2010-11-01)
+- correct handling of event description length and encoding
+
+v0.4 (2010-11-18)
+- improved the main script with command line options and parameters
+- added scripts that automates the process of downloading several .ics files through HTTP (Internet access needed), and update the QtMoko database
+- it now works on QtMoko itself as well as on a standard computer
+
+v0.5 (2011-03-19)
+- Fix for ics files that use UTC timezone (tested on a google calendar private URL)
+
+v0.6 (2011-04-03)
+- Fix for ics files that give the language in the summary or location (tested on an office calendar URL)
+- Added the possibility to run the scripts in verbose mode with "-v" option
+- When the script is ran on the phone itself, it works directly on the sqlite file, not on a copy. It should avoid possible loss of changes to this file while syncing
+
+v0.7 (???)
+
+TODO for next versions :
+- add attendees to the event descriptions
+- handle event categories
+- handle event exceptions correctly
+- make a package for QtMoko, and make it runnable through the QtMoko interface (without launching the Terminal)
+- do some speed improvements when running on QtMoko?
+- add a user interface?
