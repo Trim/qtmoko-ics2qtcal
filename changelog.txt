@@ -23,6 +23,7 @@ v0.6 (2011-04-03)
 
 v0.7 (???)
 - Fix bug with space in variable value and let calendar extension to be present or not
+- Added "server" option to avoid repeating his address for every calendar
 
 TODO for next versions :
 - add attendees to the event descriptions
