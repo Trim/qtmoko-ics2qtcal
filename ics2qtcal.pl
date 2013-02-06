@@ -315,7 +315,7 @@ main:
 						$repeatrule = 2;
 					}
 					elsif ($event->[1]->{RRULE}{'FREQ'} eq "MONTHLY") {
-						$repeatrule = 3;  # which can be replaced by 4 or 6 depending on the BYDAY value
+						$repeatrule = 4;  # which can be replaced by 4 or 6 depending on the BYDAY value
 					}
 					elsif ($event->[1]->{RRULE}{'FREQ'} eq "YEARLY") {
 						$repeatrule = 5;
@@ -347,7 +347,7 @@ main:
 						    );
 							$icallastdateaftercount = $icalrec->dtend;
 						}
-						if ($repeatrule == 3) {
+						if ($repeatrule == 4) {
 						    my $icalrec = DateTime::Event::ICal->new(
 						        dtstart => $icaldate,
 						        freq => "monthly",
@@ -395,8 +395,8 @@ main:
 								}
 								else {
 									# The event must repeat every nth day of week of every month
-									$repeatrule = 4;
-									debug("repeatrule=4");
+									$repeatrule = 3;
+									debug("repeatrule=3");
 								}
 							}
 							else {
