@@ -117,7 +117,7 @@ sub extractDateFromIcalLine {
                 $yestDayMidNight = $yestDayMidNight.$yesterday;
             }
             $yestDayMidNight=$yestDayMidNight."T235900";
-            $icaldateyesterday = DateTime::Format::ICal->new (ical => $yestDayMidNight);
+            my $icaldateyesterday = DateTime::Format::ICal->new (ical => $yestDayMidNight);
             return $icaldateyesterday->ical (localtime => 1);
 		}
 	}
