@@ -99,11 +99,26 @@ sub extractDateFromIcalLine {
 			return $date . "T000000";
 		}
 		else {
-			# It is an end date : it ends just before midnight of the day before
-			my $datemidnight = $date . "T235900";
-			my $icaldate = DateTime::Format::ICal->new (ical => $datemidnight);
-			my $icaldateyesterday = $icaldate->add (day => -1);
-			return $icaldateyesterday->ical (localtime => 1);
+            # It is an end date : it ends just before midnight of the day before
+            my $year;
+            my $month;
+            my $day;
+
+            $date=~s/(\d{4})(\d{2})(\d{2})/
+                $year=$1;
+                $month=$2;
+                $day=$3;/gxe;
+
+            my $yesterday = $day-1;
+            my $yestDayMidNight = $year.$month;
+            if($yesterday<10){
+                $yestDayMidNight = $yestDayMidNight."0".$yesterday;
+            }else{
+                $yestDayMidNight = $yestDayMidNight.$yesterday;
+            }
+            $yestDayMidNight=$yestDayMidNight."T235900";
+            $icaldateyesterday = DateTime::Format::ICal->new (ical => $yestDayMidNight);
+            return $icaldateyesterday->ical (localtime => 1);
 		}
 	}
 	else {
