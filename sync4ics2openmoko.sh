@@ -20,9 +20,9 @@ for fileurl in $*
 do
     # We force the output to have .ics extension to simplify next for loop
     if [ -z "$server" ]; then
-	    wget --no-check-certificate --timestamping --user="$user" --password="$password" "$fileurl" -O "`basename ${fileurl%%.ics}`.ics"
+	    wget --no-check-certificate --user="$user" --password="$password" "$fileurl" -O "`basename ${fileurl%%.ics}`_`date +%Y%m%d_%H%M%S`.ics"
 	else
-	    wget --no-check-certificate --timestamping --user="$user" --password="$password" "${server}/${fileurl}" -O "`basename ${fileurl%%.ics}`.ics"
+	    wget --no-check-certificate --user="$user" --password="$password" "${server}/${fileurl}" -O "`basename ${fileurl%%.ics}`_`date +%Y%m%d_%H%M%S`.ics"
 	fi
 done
 
