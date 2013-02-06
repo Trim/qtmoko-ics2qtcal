@@ -24,6 +24,8 @@ v0.6 (2011-04-03)
 v0.7 (???)
 - Fix bug with space in variable value and let calendar extension to be present or not
 - Added "server" option to avoid repeating his address for every calendar
+- Fix repetition rules for last Qtmoko (v52)
+- Replace depreciated feature Date::Ical by DateTime library as first one will be removed from next debian stable
 
 TODO for next versions :
 - add attendees to the event descriptions
