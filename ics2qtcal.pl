@@ -29,6 +29,7 @@ BEGIN {
 use DBI;
 use Tie::iCal;
 use DateTime::Format::ICal;
+use DateTime::Event::ICal;
 use DBD::SQLite;
 use Encode;
 use File::Spec;
@@ -117,8 +118,7 @@ sub extractDateFromIcalLine {
                 $yestDayMidNight = $yestDayMidNight.$yesterday;
             }
             $yestDayMidNight=$yestDayMidNight."T235900";
-            my $icaldateyesterday = DateTime::Format::ICal->new (ical => $yestDayMidNight);
-            return $icaldateyesterday->ical (localtime => 1);
+            return DateTime::Format::ICal->new (ical => $yestDayMidNight, time_zone => "local");
 		}
 	}
 	else {
@@ -332,18 +332,38 @@ main:
 						my $icaldate = DateTime::Format::ICal->new (ical => extractDateFromIcalLine($event->[1]->{DTSTART},0));
 						my $icallastdateaftercount;
 						if ($repeatrule == 1) {
-							$icallastdateaftercount = $icaldate->add (day => $count-1);
+						    my $icalrec = DateTime::Event::ICal->new(
+						        dtstart => $icaldate,
+						        freq => "daily",
+						        count => $count
+						    );
+							$icallastdateaftercount = $icalrec->dtend;
 						}
 						if ($repeatrule == 2) {
-							$icallastdateaftercount = $icaldate->add (week => $count-1);
+						    my $icalrec = DateTime::Event::ICal->new(
+						        dtstart => $icaldate,
+						        freq => "weekly",
+						        count => $count
+						    );
+							$icallastdateaftercount = $icalrec->dtend;
 						}
 						if ($repeatrule == 3) {
-							$icallastdateaftercount = $icaldate->add (month => $count-1);
+						    my $icalrec = DateTime::Event::ICal->new(
+						        dtstart => $icaldate,
+						        freq => "monthly",
+						        count => $count
+						    );
+							$icallastdateaftercount = $icalrec->dtend;
 						}
 						if ($repeatrule == 5) {
-							$icallastdateaftercount = $icaldate->add (year => $count-1);
+						    my $icalrec = DateTime::Event::ICal->new(
+						        dtstart => $icaldate,
+						        freq => "yearly",
+						        count => $count
+						    );
+							$icallastdateaftercount = $icalrec->dtend;
 						}
-						$repeatenddate = $icallastdateaftercount->ical (localtime => 1);
+						$repeatenddate = DateTime::Format::ICal->format_datetime($icallastdateaftercount);
 						$repeatenddate =~ s/^(....)(..)(..).*/$1-$2-$3/ ;
 						debug ("count=$count => repeatenddate=$repeatenddate");
 					}
