@@ -28,6 +28,7 @@ BEGIN {
 
 use DBI;
 use Tie::iCal;
+use DateTime;
 use DateTime::Format::ICal;
 use DateTime::Event::ICal;
 use DBD::SQLite;
@@ -46,7 +47,7 @@ sub debug {
 # This function reformats a datetime in ICS format to a valid SQLite timestamp
 sub reformatICSDateTimeToSQLiteTimestamp {
 	my $date = $_[0];
-	$date =~ s/^(....)(..)(..).(..)(..)(..)/$1-$2-$3T$4:$5:$6/ ;
+	$date =~ s/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/$1-$2-$3T$4:$5:$6/ ;
 	return $date;
 }
 
@@ -101,24 +102,11 @@ sub extractDateFromIcalLine {
 		}
 		else {
             # It is an end date : it ends just before midnight of the day before
-            my $year;
-            my $month;
-            my $day;
-
-            $date=~s/(\d{4})(\d{2})(\d{2})/
-                $year=$1;
-                $month=$2;
-                $day=$3;/gxe;
-
-            my $yesterday = $day-1;
-            my $yestDayMidNight = $year.$month;
-            if($yesterday<10){
-                $yestDayMidNight = $yestDayMidNight."0".$yesterday;
-            }else{
-                $yestDayMidNight = $yestDayMidNight.$yesterday;
-            }
-            $yestDayMidNight=$yestDayMidNight."T235900";
-            return DateTime::Format::ICal->new (ical => $yestDayMidNight, time_zone => "local");
+            my $dt = DateTime::Format::Ical->parse_datetime($date."T235900");
+            my $yesterday = $dt;
+            $yesterday->set_day($dt->day-1);
+            $yesterday->set_time_zone("local");
+            return DateTime::Forrmat::Ical->format_datetime($yesterday);
 		}
 	}
 	else {
@@ -323,7 +311,7 @@ main:
 					debug ("frequency=".$event->[1]->{RRULE}{'FREQ'}." => repeatrule=$repeatrule");
 					if ($event->[1]->{RRULE}{'UNTIL'} ne '') {
 						$repeatenddate = $event->[1]->{RRULE}{'UNTIL'};
-						$repeatenddate =~ s/^(....)(..)(..).*/$1-$2-$3/ ;
+						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
 						debug ("repeatenddate=$repeatenddate");
 					}
 					elsif ($event->[1]->{RRULE}{'COUNT'} ne '') {
@@ -364,7 +352,7 @@ main:
 							$icallastdateaftercount = $icalrec->dtend;
 						}
 						$repeatenddate = DateTime::Format::ICal->format_datetime($icallastdateaftercount);
-						$repeatenddate =~ s/^(....)(..)(..).*/$1-$2-$3/ ;
+						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
 						debug ("count=$count => repeatenddate=$repeatenddate");
 					}
 					if ($event->[1]->{RRULE}{'INTERVAL'} ne '') {
