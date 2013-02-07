@@ -106,7 +106,7 @@ sub extractDateFromIcalLine {
             my $yesterday = $dt;
             $yesterday->set_day($dt->day-1);
             $yesterday->set_time_zone("local");
-            return DateTime::Forrmat::ICal->format_datetime($yesterday);
+            return DateTime::Format::ICal->format_datetime($yesterday);
 		}
 	}
 	else {
