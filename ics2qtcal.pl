@@ -47,7 +47,7 @@ sub debug {
 # This function reformats a datetime in ICS format to a valid SQLite timestamp
 sub reformatICSDateTimeToSQLiteTimestamp {
 	my $date = $_[0];
-	$date =~ s/^(....)(..)(..).(..)(..)(..)/$1-$2-$3T$4:$5:$6/ ;
+	$date =~ s/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/$1-$2-$3T$4:$5:$6/ ;
 	return $date;
 }
 
@@ -311,7 +311,7 @@ main:
 					debug ("frequency=".$event->[1]->{RRULE}{'FREQ'}." => repeatrule=$repeatrule");
 					if ($event->[1]->{RRULE}{'UNTIL'} ne '') {
 						$repeatenddate = $event->[1]->{RRULE}{'UNTIL'};
-						$repeatenddate =~ s/^(....)(..)(..).*/$1-$2-$3/ ;
+						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
 						debug ("repeatenddate=$repeatenddate");
 					}
 					elsif ($event->[1]->{RRULE}{'COUNT'} ne '') {
@@ -352,7 +352,7 @@ main:
 							$icallastdateaftercount = $icalrec->dtend;
 						}
 						$repeatenddate = DateTime::Format::ICal->format_datetime($icallastdateaftercount);
-						$repeatenddate =~ s/^(....)(..)(..).*/$1-$2-$3/ ;
+						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
 						debug ("count=$count => repeatenddate=$repeatenddate");
 					}
 					if ($event->[1]->{RRULE}{'INTERVAL'} ne '') {
