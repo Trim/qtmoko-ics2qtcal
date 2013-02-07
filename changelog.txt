@@ -21,7 +21,7 @@ v0.6 (2011-04-03)
 - Added the possibility to run the scripts in verbose mode with "-v" option
 - When the script is ran on the phone itself, it works directly on the sqlite file, not on a copy. It should avoid possible loss of changes to this file while syncing
 
-v0.7 (???)
+v0.7 (2013-02-07)
 - Fix bug with space in variable value and let calendar extension to be present or not
 - Added "server" option to avoid repeating his address for every calendar
 - Fix repetition rules for last Qtmoko (v52)
