@@ -102,11 +102,11 @@ sub extractDateFromIcalLine {
 		}
 		else {
             # It is an end date : it ends just before midnight of the day before
-            my $dt = DateTime::Format::Ical->parse_datetime($date."T235900");
+            my $dt = DateTime::Format::ICal->parse_datetime($date."T235900");
             my $yesterday = $dt;
             $yesterday->set_day($dt->day-1);
             $yesterday->set_time_zone("local");
-            return DateTime::Forrmat::Ical->format_datetime($yesterday);
+            return DateTime::Forrmat::ICal->format_datetime($yesterday);
 		}
 	}
 	else {
