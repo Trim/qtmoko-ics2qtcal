@@ -85,16 +85,24 @@ sub createNoteFile {
 sub extractDateFromIcalLine {
 	my $date;
 	my $end = $_[1];
-	if (ref($_[0]) eq '') {
-		$date = $_[0];
-	}
-	elsif (ref($_[0]) eq 'ARRAY') {
-		$date = $_[0]->[1]; # big assumption?
-	}
-	else {
+	
+	# There's only one element, so it's the date
+    if (ref(\$_[0]) eq 'SCALAR') {
+        $date = $_[0];
+    }
+    elsif (ref($_[0]) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
+        if(ref($_[0][0]) eq 'SCALAR'){
+            $date = $_[0][0];
+        }
+        elsif (ref($_[0][1]) eq 'SCALAR') {
+            $date = $_[0][1];
+        }
+    }else {
 		print ("Unrecognized ical date format");
 		return undef;
 	}
+    debug("Found date : $date");
+	
 	if (length($date) == 8) {
 		if ($end == 0) {
 			# It is a start date : it starts at midnight
