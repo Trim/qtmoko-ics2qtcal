@@ -85,16 +85,24 @@ sub createNoteFile {
 sub extractDateFromIcalLine {
 	my $date;
 	my $end = $_[1];
-	if (ref($_[0]) eq '') {
-		$date = $_[0];
-	}
-	elsif (ref($_[0]) eq 'ARRAY') {
-		$date = $_[0]->[1]; # big assumption?
-	}
-	else {
+	
+	# There's only one element, so it's the date
+    if (ref(\$_[0]) eq 'SCALAR') {
+        $date = $_[0];
+    }
+    elsif (ref($_[0]) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
+        if(ref($_[0][0]) eq 'SCALAR'){
+            $date = $_[0][0];
+        }
+        elsif (ref($_[0][1]) eq 'SCALAR') {
+            $date = $_[0][1];
+        }
+    }else {
 		print ("Unrecognized ical date format");
 		return undef;
 	}
+    debug("Found date : $date");
+	
 	if (length($date) == 8) {
 		if ($end == 0) {
 			# It is a start date : it starts at midnight
@@ -119,21 +127,31 @@ sub extractDateFromIcalLine {
 
 # This function extracts the timezone from an ical start or end date
 # Currently, it only supports the distinction between local time and UTC
-# TODO : implement all the timezone specification of ics specification
+# TODO : check which time zones are good values for qtmoko database
 # first parameter : the array given by Tie::iCal
 sub extractTimeZoneFromIcalLine {
-	my $date;
-	my $tz;
-	if (ref($_[0]) eq '') {
-		$date = $_[0];
-	}
-	elsif (ref($_[0]) eq 'ARRAY') {
-		$date = $_[0]->[1]; # big assumption?
-	}
-	if ($date =~ /Z$/) {
-		$tz = "UTC";
-	}
-	return $tz;
+    my $date;
+    my $tz;
+
+    # There's only one element, so the timezone is specified by the last character
+    if (ref(\$_[0]) eq 'SCALAR') {
+        $date = $_[0];
+
+        # Timezone is UTC if date ends with Z, otherwise it's a local timezone
+        if ($date =~ /Z$/) {
+            $tz = "UTC";
+        }
+    }
+    elsif (ref($_[0]) eq 'ARRAY') {
+        if(ref($_[0][0]) eq 'HASH'){
+            $tz = $_[0][0]->{TZID};
+        }
+        elsif (ref($_[0][1]) eq 'HASH') {
+            $tz = $_[0][1]->{TZID};
+        }   
+    }
+    debug("Found timezone (empty for local timezone) : $tz");
+    return $tz;
 }
 
 # This function unescapes the escaped commas, and converts the \n to <br/>
