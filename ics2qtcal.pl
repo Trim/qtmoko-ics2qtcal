@@ -338,7 +338,7 @@ main:
 						my $icaldate = DateTime::Format::ICal->new (ical => extractDateFromIcalLine($event->[1]->{DTSTART},0));
 						my $icallastdateaftercount;
 						if ($repeatrule == 1) {
-						    my $icalrec = DateTime::Event::ICal->new(
+						    my $icalrec = DateTime::Event::ICal->recur(
 						        dtstart => $icaldate,
 						        freq => "daily",
 						        count => $count
@@ -346,7 +346,7 @@ main:
 							$icallastdateaftercount = $icalrec->dtend;
 						}
 						if ($repeatrule == 2) {
-						    my $icalrec = DateTime::Event::ICal->new(
+						    my $icalrec = DateTime::Event::ICal->recur(
 						        dtstart => $icaldate,
 						        freq => "weekly",
 						        count => $count
@@ -354,7 +354,7 @@ main:
 							$icallastdateaftercount = $icalrec->dtend;
 						}
 						if ($repeatrule == 4) {
-						    my $icalrec = DateTime::Event::ICal->new(
+						    my $icalrec = DateTime::Event::ICal->recur(
 						        dtstart => $icaldate,
 						        freq => "monthly",
 						        count => $count
@@ -362,7 +362,7 @@ main:
 							$icallastdateaftercount = $icalrec->dtend;
 						}
 						if ($repeatrule == 5) {
-						    my $icalrec = DateTime::Event::ICal->new(
+						    my $icalrec = DateTime::Event::ICal->recur(
 						        dtstart => $icaldate,
 						        freq => "yearly",
 						        count => $count
