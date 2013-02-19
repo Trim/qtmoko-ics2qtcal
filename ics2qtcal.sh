@@ -3,7 +3,7 @@
 while getopts v option
 do	case "$option" in
 	v)	verbose="-v";;
-	[?])	print >&2 "Usage: $0 [-v] file sqlite_file"
+	[?])	print >&2 "Usage: $0 [-v] file sqlite_file\n(files with absolute paths)"
 		exit 1;;
 	esac
 done
@@ -23,8 +23,8 @@ if [ -n $icsfile ] || [ -n $caldb ]; then
     perl ics2qtcal.pl "$verbose" --ical "${icsfile}-2.tmp" --qtopiadb "$caldb" --notesdirectory "./Annotator-tmp"
 
     echo "Deleting temporary files"
-    rm ./${icsfile}.tmp
-    rm ./${icsfile}-2.tmp
+    rm ${icsfile}.tmp
+    rm ${icsfile}-2.tmp
 else
     echo "ERROR : unable to treat empty files ! Command was (without options) : \n"
     echo "$0 $*"
