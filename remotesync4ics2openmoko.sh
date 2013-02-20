@@ -56,6 +56,6 @@ echo "Transferring Note files to the FreeRunner"
 scp -q Annotator-tmp/* root@192.168.0.202:/home/root/Applications/Annotator/
 
 echo "Removing *.ics local files"
-rm "*.ics"
+rm *.ics
 
 echo "Done"
