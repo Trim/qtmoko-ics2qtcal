@@ -54,4 +54,8 @@ ssh root@192.168.0.202 "rm -f /home/root/Applications/Annotator/0-*"
 
 echo "Transferring Note files to the FreeRunner"
 scp -q Annotator-tmp/* root@192.168.0.202:/home/root/Applications/Annotator/
+
+echo "Removing *.ics local files"
+rm "*.ics"
+
 echo "Done"

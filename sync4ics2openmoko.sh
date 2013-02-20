@@ -42,9 +42,14 @@ do
         ./ics2qtcal.sh "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
     fi
 done;
+
 echo "Removing existing Note files"
 rm -f /home/root/Applications/Annotator/0-*
 
 echo "Copying Note files"
 cp ./Annotator-tmp/* /home/root/Applications/Annotator/
+
+echo "Removing *.ics local files"
+rm "*.ics"
+
 echo "Done"
