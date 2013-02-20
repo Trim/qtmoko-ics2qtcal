@@ -7,7 +7,7 @@ do	case "$option" in
 		exit 1;;
 	esac
 done
-shift `expr $OPTIND`
+shift `expr $OPTIND - 1`
 
 icsfile="$1"
 caldb="$2"
