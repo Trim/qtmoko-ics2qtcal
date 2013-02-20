@@ -91,10 +91,10 @@ sub extractDateFromIcalLine {
         $date = $_[0];
     }
     elsif (ref($_[0]) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
-        if(ref($_[0][0]) eq 'SCALAR'){
+        if(ref(\$_[0][0]) eq 'SCALAR'){
             $date = $_[0][0];
         }
-        elsif (ref($_[0][1]) eq 'SCALAR') {
+        elsif (ref(\$_[0][1]) eq 'SCALAR') {
             $date = $_[0][1];
         }
     }else {
