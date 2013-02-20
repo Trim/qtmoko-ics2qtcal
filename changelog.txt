@@ -27,6 +27,11 @@ v0.7 (2013-02-07)
 - Fix repetition rules for last Qtmoko (v52)
 - Replace depreciated feature Date::Ical by DateTime library as first one will be removed from next debian stable
 
+v0.7.2 (2013-02-20)
+- Remove some assumptions to retrieve date and timezone
+- Fix bugs with recurence manipulation
+- Fix some bugs with script invokations
+
 TODO for next versions :
 - add attendees to the event descriptions
 - handle event categories
