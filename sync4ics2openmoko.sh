@@ -50,6 +50,6 @@ echo "Copying Note files"
 cp ./Annotator-tmp/* /home/root/Applications/Annotator/
 
 echo "Removing *.ics local files"
-rm "*.ics"
+rm *.ics
 
 echo "Done"
