@@ -335,7 +335,7 @@ main:
 					elsif ($event->[1]->{RRULE}{'COUNT'} ne '') {
 						my $count = $event->[1]->{RRULE}{'COUNT'};
 						# Compute the ical date corresponding to the start date
-						my $icaldate = DateTime::Format::ICal->new (ical => extractDateFromIcalLine($event->[1]->{DTSTART},0));
+						my $icaldate = DateTime::Format::ICal->parse_datetime(extractDateFromIcalLine($event->[1]->{DTSTART},0));
 						my $icallastdateaftercount;
 						if ($repeatrule == 1) {
 						    my $icalrec = DateTime::Event::ICal->recur(
@@ -343,7 +343,7 @@ main:
 						        freq => "daily",
 						        count => $count
 						    );
-							$icallastdateaftercount = $icalrec->dtend;
+							$icallastdateaftercount = $icalrec->max;
 						}
 						if ($repeatrule == 2) {
 						    my $icalrec = DateTime::Event::ICal->recur(
@@ -351,7 +351,7 @@ main:
 						        freq => "weekly",
 						        count => $count
 						    );
-							$icallastdateaftercount = $icalrec->dtend;
+							$icallastdateaftercount = $icalrec->max;
 						}
 						if ($repeatrule == 4) {
 						    my $icalrec = DateTime::Event::ICal->recur(
@@ -359,7 +359,7 @@ main:
 						        freq => "monthly",
 						        count => $count
 						    );
-							$icallastdateaftercount = $icalrec->dtend;
+							$icallastdateaftercount = $icalrec->max;
 						}
 						if ($repeatrule == 5) {
 						    my $icalrec = DateTime::Event::ICal->recur(
@@ -367,7 +367,7 @@ main:
 						        freq => "yearly",
 						        count => $count
 						    );
-							$icallastdateaftercount = $icalrec->dtend;
+							$icallastdateaftercount = $icalrec->max;
 						}
 						$repeatenddate = DateTime::Format::ICal->format_datetime($icallastdateaftercount);
 						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
