@@ -36,11 +36,20 @@ mkdir -p Annotator-tmp
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
 do
-	./ics2qtcal.sh "$verbose" "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+    if [ -n "$verbose" ] ; then
+        ./ics2qtcal.sh -v "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+    else
+        ./ics2qtcal.sh "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+    fi
 done;
+
 echo "Removing existing Note files"
 rm -f /home/root/Applications/Annotator/0-*
 
 echo "Copying Note files"
 cp ./Annotator-tmp/* /home/root/Applications/Annotator/
+
+echo "Removing *.ics local files"
+rm "*.ics"
+
 echo "Done"

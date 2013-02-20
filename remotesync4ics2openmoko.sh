@@ -39,7 +39,11 @@ mkdir -p Annotator-tmp
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
 do
-	./ics2qtcal.sh "$verbose" "$filename" ./qtopia_db.sqlite
+    if [ -n "$verbose" ] ; then
+        ./ics2qtcal.sh -v "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+    else
+        ./ics2qtcal.sh "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+    fi
 done;
 
 echo "Transferring qtopia_db.sqlite back to the FreeRunner"
@@ -50,4 +54,8 @@ ssh root@192.168.0.202 "rm -f /home/root/Applications/Annotator/0-*"
 
 echo "Transferring Note files to the FreeRunner"
 scp -q Annotator-tmp/* root@192.168.0.202:/home/root/Applications/Annotator/
+
+echo "Removing *.ics local files"
+rm "*.ics"
+
 echo "Done"
