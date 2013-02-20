@@ -39,7 +39,11 @@ mkdir -p Annotator-tmp
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
 do
-	./ics2qtcal.sh "$verbose" "$filename" ./qtopia_db.sqlite
+    if [ -n "$verbose" ] ; then
+        ./ics2qtcal.sh -v "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+    else
+        ./ics2qtcal.sh "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+    fi
 done;
 
 echo "Transferring qtopia_db.sqlite back to the FreeRunner"
