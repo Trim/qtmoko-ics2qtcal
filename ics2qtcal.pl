@@ -312,28 +312,66 @@ main:
 				my $repeatfrequency = 1;
 				my $repeatenddate = undef;
 				my $repeatweekflags = 0;
-				if ($event->[1]->{RRULE}{'FREQ'} ne '') {
+				
+				my $icsfreq;
+				my $icsuntil;
+				my $icscount;
+				my $icsinterval;
+				my $icsbyday;
+				if(ref($event->[1]->{RRULE}) ne "HASH"){
+					print "event is not an hash but an ";
+					print ref($event->[1]->{RRULE});
+					print "\n";
+					if(ref($event->[1]->{RRULE}) eq "ARRAY"){
+						for(my $i=0;$i<=$#{$event->[1]->{RRULE}};$i++){
+							print "RRULE $i : ";
+							print $event->[1]->{RRULE}[$i];
+							print "\n";
+							if(ref($event->[1]->{RRULE}[$i]) eq "HASH"){
+								print "Hash keys -> ";
+								while ((my $c, my $v) = each($event->[1]->{RRULE}[$i])) {
+									print "$c => $v ;";
+								}
+								print "\n";
+							}else{
+								$event->[1]->{RRULE}[$i]=~s/FREQ=(.*?);/$icsfreq=$1/gxe;
+								$event->[1]->{RRULE}[$i]=~s/UNTIL=(.*?);/$icsuntil=$1/gxe;
+								$event->[1]->{RRULE}[$i]=~s/COUNT=(.*?);/$icscount=$1/gxe;
+								$event->[1]->{RRULE}[$i]=~s/INTERVAL=(.*?);/$icsinterval=$1/gxe;
+								$event->[1]->{RRULE}[$i]=~s/BYDAY=(.*?);/$icsbyday=$1/gxe;
+							}
+						}
+					}
+				}else{
+					$icsfreq=$event->[1]->{RRULE}{'FREQ'};
+					$icsuntil=$event->[1]->{RRULE}{'UNTIL'};
+					$icscount=$event->[1]->{RRULE}{'COUNT'};
+					$icsinterval=$event->[1]->{RRULE}{'INTERVAL'};
+					$icsbyday=$event->[1]->{RRULE}{'BYDAY'};
+				}
+
+				if ($icsfreq ne '') {
 					$repeatrule = 1;
-					if ($event->[1]->{RRULE}{'FREQ'} eq "DAILY") {
+					if ($icsfreq eq "DAILY") {
 						$repeatrule = 1;
 					}
-					elsif ($event->[1]->{RRULE}{'FREQ'} eq "WEEKLY") {
+					elsif ($icsfreq eq "WEEKLY") {
 						$repeatrule = 2;
 					}
-					elsif ($event->[1]->{RRULE}{'FREQ'} eq "MONTHLY") {
+					elsif ($icsfreq eq "MONTHLY") {
 						$repeatrule = 4;  # which can be replaced by 4 or 6 depending on the BYDAY value
 					}
-					elsif ($event->[1]->{RRULE}{'FREQ'} eq "YEARLY") {
+					elsif ($icsfreq eq "YEARLY") {
 						$repeatrule = 5;
 					}
-					debug ("frequency=".$event->[1]->{RRULE}{'FREQ'}." => repeatrule=$repeatrule");
-					if ($event->[1]->{RRULE}{'UNTIL'} ne '') {
-						$repeatenddate = $event->[1]->{RRULE}{'UNTIL'};
+					debug ("frequency=".$icsfreq." => repeatrule=$repeatrule");
+					if ($icsuntil ne '') {
+						$repeatenddate = $icsuntil;
 						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
 						debug ("repeatenddate=$repeatenddate");
 					}
-					elsif ($event->[1]->{RRULE}{'COUNT'} ne '') {
-						my $count = $event->[1]->{RRULE}{'COUNT'};
+					elsif ($icscount ne '') {
+						my $count = $icscount;
 						# Compute the ical date corresponding to the start date
 						my $icaldate = DateTime::Format::ICal->parse_datetime(extractDateFromIcalLine($event->[1]->{DTSTART},0));
 						my $icallastdateaftercount;
@@ -373,16 +411,17 @@ main:
 						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
 						debug ("count=$count => repeatenddate=$repeatenddate");
 					}
-					if ($event->[1]->{RRULE}{'INTERVAL'} ne '') {
-						$repeatfrequency = $event->[1]->{RRULE}{'INTERVAL'};
+					if ($icsinterval ne '') {
+						$repeatfrequency = $icsinterval;
 						debug ("repeatfrequency=$repeatfrequency");
 					}
-					if ($event->[1]->{RRULE}{'BYDAY'} ne '') {
+					if ($icsbyday ne '') {
 						# Compute the repeatweekflags from the days of week where the event occurs
-						if (ref($event->[1]->{RRULE}{'BYDAY'}) eq 'ARRAY') {
+						if (ref($icsbyday) eq 'ARRAY') {
 							# There is more than one item in the list
 							my $i = 0;
-							while ((my $day_of_week = $event->[1]->{RRULE}->{BYDAY}[$i]) ne '') {
+							my @byday = @$icsbyday;
+							while ((my $day_of_week = $byday[$i]) ne '') {
 								debug ("day_of_week=$day_of_week");
 								$repeatweekflags += repeatWeekFlagFromDayOfWeek ($day_of_week);
 								$i++;
@@ -391,7 +430,7 @@ main:
 						}
 						else {
 							# There is only one item in the list
-							my $day_of_week = $event->[1]->{RRULE}->{BYDAY};
+							my $day_of_week = $icsbyday;
 							if ($day_of_week =~ m/[0-9]/) {
 								# Cases where the day of week is preceeded by a number (positive or negative)
 								if ($day_of_week =~ m/\-/) {
