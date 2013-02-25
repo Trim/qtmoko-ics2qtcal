@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -ls
 
 use strict;
 
@@ -319,35 +319,42 @@ main:
 				my $icsinterval;
 				my $icsbyday;
 				if(ref($event->[1]->{RRULE}) ne "HASH"){
-					print "event is not an hash but an ";
-					print ref($event->[1]->{RRULE});
-					print "\n";
 					if(ref($event->[1]->{RRULE}) eq "ARRAY"){
 						for(my $i=0;$i<=$#{$event->[1]->{RRULE}};$i++){
-							print "RRULE $i : ";
-							print $event->[1]->{RRULE}[$i];
-							print "\n";
+							debug("RRULE $i : $event->[1]->{RRULE}[$i]");
 							if(ref($event->[1]->{RRULE}[$i]) eq "HASH"){
-								print "Hash keys -> ";
+								debug("Hash keys -> ");
 								while ((my $c, my $v) = each($event->[1]->{RRULE}[$i])) {
-									print "$c => $v ;";
+									debug("... $c => $v");
 								}
-								print "\n";
 							}else{
-								$event->[1]->{RRULE}[$i]=~s/FREQ=(.*?);/$icsfreq=$1/gxe;
-								$event->[1]->{RRULE}[$i]=~s/UNTIL=(.*?);/$icsuntil=$1/gxe;
-								$event->[1]->{RRULE}[$i]=~s/COUNT=(.*?);/$icscount=$1/gxe;
-								$event->[1]->{RRULE}[$i]=~s/INTERVAL=(.*?);/$icsinterval=$1/gxe;
-								$event->[1]->{RRULE}[$i]=~s/BYDAY=(.*?);/$icsbyday=$1/gxe;
+								
+								$icsfreq=$1 if $event->[1]->{RRULE}[$i]=~s/FREQ=(.*?);//g;
+								$icsuntil=$1 if $event->[1]->{RRULE}[$i]=~s/UNTIL=(.*?);//g;
+								$icscount=$1 if $event->[1]->{RRULE}[$i]=~s/COUNT=(.*?);//g;
+								$icsinterval=$1 if $event->[1]->{RRULE}[$i]=~s/INTERVAL=(.*?);//g;
+								$icsbyday=$1 if $event->[1]->{RRULE}[$i]=~s/BYDAY=(.*?);//g;
+								debug("NOT HASH");
+								debug("icsfreq : $icsfreq");
+								debug("icsuntil : $icsuntil");
+								debug("icscount : $icscount");
+								debug("icsinterval : $icsinterval");
+								debug("icsbyday : $icsbyday");
 							}
 						}
 					}
 				}else{
-					$icsfreq=$event->[1]->{RRULE}{'FREQ'};
-					$icsuntil=$event->[1]->{RRULE}{'UNTIL'};
-					$icscount=$event->[1]->{RRULE}{'COUNT'};
-					$icsinterval=$event->[1]->{RRULE}{'INTERVAL'};
-					$icsbyday=$event->[1]->{RRULE}{'BYDAY'};
+					$icsfreq=$event->[1]->{RRULE}{'FREQ'} 		 if defined $event->[1]->{RRULE}{'FREQ'};
+					$icsuntil=$event->[1]->{RRULE}{'UNTIL'} 	 if defined $event->[1]->{RRULE}{'UNTIL'};
+					$icscount=$event->[1]->{RRULE}{'COUNT'} 	 if defined $event->[1]->{RRULE}{'COUNT'};
+					$icsinterval=$event->[1]->{RRULE}{'INTERVAL'} 	 if defined $event->[1]->{RRULE}{'INTERVAL'};
+					$icsbyday=$event->[1]->{RRULE}{'BYDAY'} 	 if defined $event->[1]->{RRULE}{'BYDAY'};
+					debug("HASH");
+					debug("icsfreq : $icsfreq") if defined $event->[1]->{RRULE}{'FREQ'};
+					debug("icsuntil : $icsuntil") if defined $event->[1]->{RRULE}{'UNTIL'};
+					debug("icscount : $icscount") if defined $event->[1]->{RRULE}{'COUNT'};
+					debug("icsinterval : $icsinterval") if defined $event->[1]->{RRULE}{'INTERVAL'};
+					debug("icsbyday : $icsbyday") if defined $event->[1]->{RRULE}{'BYDAY'};
 				}
 
 				if ($icsfreq ne '') {
