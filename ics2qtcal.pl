@@ -40,7 +40,7 @@ $DBD::SQLite::COLLATION{NOCASE} = sub { $_[0] cmp $_[1] };
 
 # Print a debug message if the verbose mode is on
 sub debug {
-	print STDERR $_[0]."\n" if $verbose;
+	print STDERR $_[0] if $verbose;
 }
 
 

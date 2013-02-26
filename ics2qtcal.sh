@@ -20,7 +20,7 @@ if [ -n $icsfile ] || [ -n $caldb ]; then
     sed -e 's/\r$//g' "${icsfile}.tmp" >"${icsfile}-2.tmp"
 
     echo "Processing file $icsfile"
-    perl ics2qtcal.pl "$verbose" --ical "${icsfile}-2.tmp" --qtopiadb "$caldb" --notesdirectory "./Annotator-tmp"
+    perl ics2qtcal.pl -- "$verbose" --ical "${icsfile}-2.tmp" --qtopiadb "$caldb" --notesdirectory "./Annotator-tmp"
 
     echo "Deleting temporary files"
     rm ${icsfile}.tmp
