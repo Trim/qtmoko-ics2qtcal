@@ -40,7 +40,12 @@ $DBD::SQLite::COLLATION{NOCASE} = sub { $_[0] cmp $_[1] };
 
 # Print a debug message if the verbose mode is on
 sub debug {
-	print STDERR $_[0] if $verbose;
+	print STDERR "INFO : ".$_[0] if $verbose;
+}
+
+# Print a warning debug message if the verbose mode is on
+sub debugwarn {
+	print STDERR "WARN : ".$_[0] if $verbose;
 }
 
 
@@ -98,7 +103,7 @@ sub extractDateFromIcalLine {
 			$date = $_[0][1];
 		}
 	}else {
-		print ("Unrecognized ical date format");
+		debugwarn ("Unrecognized ical date format");
 		return undef;
 	}
 	debug("Found date : $date");
@@ -244,6 +249,7 @@ main:
 	# Loop through ical Events
 	my $indexInFile = 0;
 	for my $line (@lines) {
+		debug("Reading line : $line");
 		if (substr($line, 0, 3) eq 'UID') {
 			if ($ical->unfold($indexInFile) =~ /^UID.*:(.*)$/) {
 				my $uid = $1;
@@ -251,17 +257,15 @@ main:
 				# Tie::iCal has structure :
 				#   $events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
 				# where VEVENT is the type of the iCal compenent (see rfc RFC 2445)
-				debug ("Prepare the appointment recid=$recid");
-
 				my @component = @{$ical->toHash($indexInFile)};
 				debug ("Prepare the $component[0] ical object recid=$recid");
 				if(@component[0] eq 'VEVENT'){
-					my %event = $component[1];
+					my %event = %{$component[1]};
 					# Description
 					my $description = $event{SUMMARY};
 					# Ignore the possible language given in this line
 					if (ref($description) eq 'ARRAY') {
-						debug ("Ignoring the HASHes in the Summary line");
+						debugwarn ("Ignoring the HASHes in the Summary line");
 						my $indexInDescription = 0;
 						# Take the first string in the line (ignoring all the HASHes)
 						while (ref($description->[$indexInDescription]) eq 'HASH') {
@@ -292,7 +296,7 @@ main:
 					my $location = $event{LOCATION};
 					# Ignore the possible language given in this line
 					if (ref($location) eq 'ARRAY') {
-						debug ("Ignoring the HASHes in the Location line");
+						debugwarn ("Ignoring the HASHes in the Location line");
 						my $indexInLocation = 0;
 						# Take the first string in the line (ignoring all the HASHes)
 						while (ref($location->[$indexInLocation]) eq 'HASH') {
@@ -348,7 +352,7 @@ main:
 								}
 							}
 						}else{
-							debug("WARN : RRULE is neither an array or a hash. It's a : ".ref($event{RRULE}));
+							debugwanr("RRULE is neither an array or a hash. It's a : ".ref($event{RRULE}));
 						}
 					}else{
 						$icsfreq=$event{RRULE}{'FREQ'} 		 if defined $event{RRULE}{'FREQ'};
