@@ -21,7 +21,7 @@ BEGIN {
 	) {
 		pod2usage(-verbose => 2);
 		exit;
-	}	
+	}
 }
 
 
@@ -87,21 +87,21 @@ sub extractDateFromIcalLine {
 	my $end = $_[1];
 	
 	# There's only one element, so it's the date
-    if (ref(\$_[0]) eq 'SCALAR') {
-        $date = $_[0];
-    }
-    elsif (ref($_[0]) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
-        if(ref(\$_[0][0]) eq 'SCALAR'){
-            $date = $_[0][0];
-        }
-        elsif (ref(\$_[0][1]) eq 'SCALAR') {
-            $date = $_[0][1];
-        }
-    }else {
+	if (ref(\$_[0]) eq 'SCALAR') {
+		$date = $_[0];
+	}
+	elsif (ref($_[0]) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
+		if(ref(\$_[0][0]) eq 'SCALAR'){
+			$date = $_[0][0];
+		}
+		elsif (ref(\$_[0][1]) eq 'SCALAR') {
+			$date = $_[0][1];
+		}
+	}else {
 		print ("Unrecognized ical date format");
 		return undef;
 	}
-    debug("Found date : $date");
+	debug("Found date : $date");
 	
 	if (length($date) == 8) {
 		if ($end == 0) {
@@ -109,12 +109,12 @@ sub extractDateFromIcalLine {
 			return $date . "T000000";
 		}
 		else {
-            # It is an end date : it ends just before midnight of the day before
-            my $dt = DateTime::Format::ICal->parse_datetime($date."T235900");
-            my $yesterday = $dt;
-            $yesterday->set_day($dt->day-1);
-            $yesterday->set_time_zone("local");
-            return DateTime::Format::ICal->format_datetime($yesterday);
+			# It is an end date : it ends just before midnight of the day before
+			my $dt = DateTime::Format::ICal->parse_datetime($date."T235900");
+			my $yesterday = $dt;
+			$yesterday->set_day($dt->day-1);
+			$yesterday->set_time_zone("local");
+			return DateTime::Format::ICal->format_datetime($yesterday);
 		}
 	}
 	else {
@@ -130,28 +130,28 @@ sub extractDateFromIcalLine {
 # TODO : check which time zones are good values for qtmoko database
 # first parameter : the array given by Tie::iCal
 sub extractTimeZoneFromIcalLine {
-    my $date;
-    my $tz;
+	my $date;
+	my $tz;
 
-    # There's only one element, so the timezone is specified by the last character
-    if (ref(\$_[0]) eq 'SCALAR') {
-        $date = $_[0];
+	# There's only one element, so the timezone is specified by the last character
+	if (ref(\$_[0]) eq 'SCALAR') {
+		$date = $_[0];
 
-        # Timezone is UTC if date ends with Z, otherwise it's a local timezone
-        if ($date =~ /Z$/) {
-            $tz = "UTC";
-        }
-    }
-    elsif (ref($_[0]) eq 'ARRAY') {
-        if(ref($_[0][0]) eq 'HASH'){
-            $tz = $_[0][0]->{TZID};
-        }
-        elsif (ref($_[0][1]) eq 'HASH') {
-            $tz = $_[0][1]->{TZID};
-        }   
-    }
-    debug("Found timezone (empty for local timezone) : $tz");
-    return $tz;
+		# Timezone is UTC if date ends with Z, otherwise it's a local timezone
+		if ($date =~ /Z$/) {
+			$tz = "UTC";
+		}
+	}
+	elsif (ref($_[0]) eq 'ARRAY') {
+		if(ref($_[0][0]) eq 'HASH'){
+			$tz = $_[0][0]->{TZID};
+		}
+		elsif (ref($_[0][1]) eq 'HASH') {
+			$tz = $_[0][1]->{TZID};
+		}   
+	}
+	debug("Found timezone (empty for local timezone) : $tz");
+	return $tz;
 }
 
 # This function unescapes the escaped commas, and converts the \n to <br/>
@@ -388,35 +388,35 @@ main:
 						my $icaldate = DateTime::Format::ICal->parse_datetime(extractDateFromIcalLine($event{DTSTART},0));
 						my $icallastdateaftercount;
 						if ($repeatrule == 1) {
-						    my $icalrec = DateTime::Event::ICal->recur(
-						        dtstart => $icaldate,
-						        freq => "daily",
-						        count => $count
-						    );
+							my $icalrec = DateTime::Event::ICal->recur(
+								dtstart => $icaldate,
+								freq => "daily",
+								count => $count
+							);
 							$icallastdateaftercount = $icalrec->max;
 						}
 						if ($repeatrule == 2) {
-						    my $icalrec = DateTime::Event::ICal->recur(
-						        dtstart => $icaldate,
-						        freq => "weekly",
-						        count => $count
-						    );
+							my $icalrec = DateTime::Event::ICal->recur(
+								dtstart => $icaldate,
+								freq => "weekly",
+								count => $count
+							);
 							$icallastdateaftercount = $icalrec->max;
 						}
 						if ($repeatrule == 4) {
-						    my $icalrec = DateTime::Event::ICal->recur(
-						        dtstart => $icaldate,
-						        freq => "monthly",
-						        count => $count
-						    );
+							my $icalrec = DateTime::Event::ICal->recur(
+								dtstart => $icaldate,
+								freq => "monthly",
+								count => $count
+							);
 							$icallastdateaftercount = $icalrec->max;
 						}
 						if ($repeatrule == 5) {
-						    my $icalrec = DateTime::Event::ICal->recur(
-						        dtstart => $icaldate,
-						        freq => "yearly",
-						        count => $count
-						    );
+							my $icalrec = DateTime::Event::ICal->recur(
+								dtstart => $icaldate,
+								freq => "yearly",
+								count => $count
+							);
 							$icallastdateaftercount = $icalrec->max;
 						}
 						$repeatenddate = DateTime::Format::ICal->format_datetime($icallastdateaftercount);
