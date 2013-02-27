@@ -249,7 +249,6 @@ main:
 	# Loop through ical Events
 	my $indexInFile = 0;
 	for my $line (@lines) {
-		debug("Reading line : $line");
 		if (substr($line, 0, 3) eq 'UID') {
 			if ($ical->unfold($indexInFile) =~ /^UID.*:(.*)$/) {
 				my $uid = $1;
@@ -352,7 +351,7 @@ main:
 								}
 							}
 						}else{
-							debugwanr("RRULE is neither an array or a hash. It's a : ".ref($event{RRULE}));
+							debugwarn("RRULE is neither an array or a hash. It's a : ".ref($event{RRULE}));
 						}
 					}else{
 						$icsfreq=$event{RRULE}{'FREQ'} 		 if defined $event{RRULE}{'FREQ'};
