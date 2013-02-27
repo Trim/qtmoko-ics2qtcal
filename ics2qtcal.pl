@@ -251,9 +251,10 @@ main:
 				# Tie::iCal has structure :
 				#   $events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
 				# where VEVENT is the type of the iCal compenent (see rfc RFC 2445)
-				my @component = $ical->toHash($indexInFile);
 				debug ("Prepare the appointment recid=$recid");
 
+				my @component = @{$ical->toHash($indexInFile)};
+				debug ("Prepare the $component[0] ical object recid=$recid");
 				if(@component[0] eq 'VEVENT'){
 					my %event = $component[1];
 					# Description
