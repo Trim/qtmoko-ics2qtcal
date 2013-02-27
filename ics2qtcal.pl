@@ -89,18 +89,18 @@ sub createNoteFile {
 # second parameter : is this an end date (1) or start date (0) ?
 sub extractDateFromIcalLine {
 	my $date;
-	my $end = $_[1];
+	my ($icsDate, $end) = @_;
 	
 	# There's only one element, so it's the date
-	if (ref(\$_[0]) eq 'SCALAR') {
-		$date = $_[0];
+	if (ref($icsDate) eq 'SCALAR') {
+		$date = $icsDate;
 	}
-	elsif (ref($_[0]) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
-		if(ref(\$_[0][0]) eq 'SCALAR'){
-			$date = $_[0][0];
-		}
-		elsif (ref(\$_[0][1]) eq 'SCALAR') {
-			$date = $_[0][1];
+	elsif (ref($icsDate) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
+		my @icsDateArray = @$icsDate;
+		for my $icsParam (@icsDateArray ){
+			if(ref(\$icsParam) eq 'SCALAR' && $icsParam=~/\d{8}T\d{6}/){
+				$date = $icsParam;
+			}
 		}
 	}else {
 		debugwarn ("Unrecognized ical date format");
@@ -135,25 +135,26 @@ sub extractDateFromIcalLine {
 # TODO : check which time zones are good values for qtmoko database
 # first parameter : the array given by Tie::iCal
 sub extractTimeZoneFromIcalLine {
+	my ($icsDate) = @_;
 	my $date;
 	my $tz;
 
 	# There's only one element, so the timezone is specified by the last character
-	if (ref(\$_[0]) eq 'SCALAR') {
-		$date = $_[0];
+	if (ref(\$icsDate) eq 'SCALAR') {
+		$date = $icsDate;
 
 		# Timezone is UTC if date ends with Z, otherwise it's a local timezone
 		if ($date =~ /Z$/) {
 			$tz = "UTC";
 		}
 	}
-	elsif (ref($_[0]) eq 'ARRAY') {
-		if(ref($_[0][0]) eq 'HASH'){
-			$tz = $_[0][0]->{TZID};
+	elsif (ref($icsDate) eq 'ARRAY') {
+		my @icsDateArray = @$icsDate;
+		for my $icsParam (@icsDateArray ){
+			if(ref($icsParam) eq 'HASH' && defined($icsParam->{TZID})){
+				$tz = $icsParam->{TZID};
+			}
 		}
-		elsif (ref($_[0][1]) eq 'HASH') {
-			$tz = $_[0][1]->{TZID};
-		}   
 	}
 	debug("Found timezone (empty for local timezone) : $tz");
 	return $tz;
