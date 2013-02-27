@@ -199,6 +199,30 @@ sub repeatWeekFlagFromDayOfWeek {
 	return $repeatweekflags;
 }
 
+# Find a parameter in a certain content line
+sub getIcalParameter{
+	my ($content, $param) = @_;
+	my $result;
+	if(ref(\$content) eq 'SCALAR'){ #single value (need to check by caller)
+		$result=$content;
+	}elsif(ref($content) eq 'HASH'){ #impossible
+		$result=$content->{$param};
+	}elsif(ref($content) eq 'ARRAY'){
+		for my $cont (@$content){
+			if(ref($cont) eq 'HASH' && defined($cont->{$param})){
+				$result=$cont->{$param};
+			}elsif(ref(\$cont) eq 'SCALAR' && $cont=~/$param/){
+				if($cont=~/$param=(.*?);/){
+					$result=$1;
+				}else{
+					$result=$cont;
+				}
+			}
+		}
+	}
+	debug("Found parameter $param with value :$result");
+	return $result;
+}
 
 main:
 {
