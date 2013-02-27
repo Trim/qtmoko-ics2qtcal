@@ -462,6 +462,8 @@ main:
 												$repeatrule = 3;
 											}elsif($icsfreq eq 'MONTHLY'){
 												$repeatrule = 4;
+											}elsif($icsfreq eq 'YEARLY'){
+												$repeatrule = 5;
 											}
 										}
 										debug("repeatrule=$repeatrule");
