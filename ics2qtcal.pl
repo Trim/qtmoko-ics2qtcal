@@ -455,13 +455,16 @@ main:
 										if ($day_of_week =~ m/\-/) {
 											# The event must repeat every nth day of week from the end of every month
 											$repeatrule = 6;
-											debug("repeatrule=6");
 										}
 										else {
 											# The event must repeat every nth day of week of every month
-											$repeatrule = 3;
-											debug("repeatrule=3");
+											if($icsfreq eq 'WEEKLY'){
+												$repeatrule = 3;
+											}elsif($icsfreq eq 'MONTHLY'){
+												$repeatrule = 4;
+											}
 										}
+										debug("repeatrule=$repeatrule");
 									}
 									else {
 										# There is one simple day
