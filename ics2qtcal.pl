@@ -328,18 +328,17 @@ main:
 						for(my $i=0;$i<=$#{$event{RRULE}};$i++){
 							debug("RRULE $i : $event{RRULE}[$i]");
 							if(ref($event{RRULE}[$i]) eq "HASH"){
-								debug("Hash keys -> ");
+								debug("Hash keys ignored -> ");
 								while ((my $c, my $v) = each($event{RRULE}[$i])) {
 									debug("... $c => $v");
 								}
 							}else{
-								
 								$icsfreq=$1 if $event{RRULE}[$i]=~s/FREQ=(.*?);//g;
 								$icsuntil=$1 if $event{RRULE}[$i]=~s/UNTIL=(.*?);//g;
 								$icscount=$1 if $event{RRULE}[$i]=~s/COUNT=(.*?);//g;
 								$icsinterval=$1 if $event{RRULE}[$i]=~s/INTERVAL=(.*?);//g;
 								$icsbyday=$1 if $event{RRULE}[$i]=~s/BYDAY=(.*?);//g;
-								debug("NOT HASH");
+								debug("Found RRULE parameters from array :");
 								debug("icsfreq : $icsfreq");
 								debug("icsuntil : $icsuntil");
 								debug("icscount : $icscount");
@@ -347,6 +346,8 @@ main:
 								debug("icsbyday : $icsbyday");
 							}
 						}
+					}else{
+						debug("WARN : RRULE is neither an array or a hash. It's a : ".ref($event{RRULE}));
 					}
 				}else{
 					$icsfreq=$event{RRULE}{'FREQ'} 		 if defined $event{RRULE}{'FREQ'};
@@ -354,7 +355,7 @@ main:
 					$icscount=$event{RRULE}{'COUNT'} 	 if defined $event{RRULE}{'COUNT'};
 					$icsinterval=$event{RRULE}{'INTERVAL'} 	 if defined $event{RRULE}{'INTERVAL'};
 					$icsbyday=$event{RRULE}{'BYDAY'} 	 if defined $event{RRULE}{'BYDAY'};
-					debug("HASH");
+					debug("Found RRULE parameters from hash :");
 					debug("icsfreq : $icsfreq") if defined $event{RRULE}{'FREQ'};
 					debug("icsuntil : $icsuntil") if defined $event{RRULE}{'UNTIL'};
 					debug("icscount : $icscount") if defined $event{RRULE}{'COUNT'};
