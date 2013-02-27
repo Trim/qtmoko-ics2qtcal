@@ -91,21 +91,7 @@ sub extractDateFromIcalLine {
 	my $date;
 	my ($icsDate, $end) = @_;
 	
-	# There's only one element, so it's the date
-	if (ref($icsDate) eq 'SCALAR') {
-		$date = $icsDate;
-	}
-	elsif (ref($icsDate) eq 'ARRAY') { #This array should contain an hash with TZID and a scalar with date-time
-		my @icsDateArray = @$icsDate;
-		for my $icsParam (@icsDateArray ){
-			if(ref(\$icsParam) eq 'SCALAR' && $icsParam=~/\d{8}T\d{6}/){
-				$date = $icsParam;
-			}
-		}
-	}else {
-		debugwarn ("Unrecognized ical date format");
-		return undef;
-	}
+	$date=getIcalParameter($icsDate, "\\d{8}T\\d{6}");
 	debug("Found date : $date");
 	
 	if (length($date) == 8) {
@@ -139,23 +125,17 @@ sub extractTimeZoneFromIcalLine {
 	my $date;
 	my $tz;
 
-	# There's only one element, so the timezone is specified by the last character
-	if (ref(\$icsDate) eq 'SCALAR') {
-		$date = $icsDate;
+	$tz=getIcalParameter($icsDate, 'TZID');
+	
+	# If we receive a date, so the timezone is defined by last character
+	if($tz=~/\d{8}T\d{6}/){
+		if($tz=~/Z$/){
+			$tz="UTC"; # Z means UTC timezone
+		}else{
+			$tz=''; #else that's a local timezone and we put nothing.
+		}
+	}
 
-		# Timezone is UTC if date ends with Z, otherwise it's a local timezone
-		if ($date =~ /Z$/) {
-			$tz = "UTC";
-		}
-	}
-	elsif (ref($icsDate) eq 'ARRAY') {
-		my @icsDateArray = @$icsDate;
-		for my $icsParam (@icsDateArray ){
-			if(ref($icsParam) eq 'HASH' && defined($icsParam->{TZID})){
-				$tz = $icsParam->{TZID};
-			}
-		}
-	}
 	debug("Found timezone (empty for local timezone) : $tz");
 	return $tz;
 }
@@ -333,7 +313,7 @@ main:
 
 					# Check if it's an all-day event
 					my $allday;
-					if ( (ref($event{DTSTART}) eq 'ARRAY') && ($event{DTSTART}->[0]{'VALUE'} eq "DATE") ) {
+					if ( getIcalParameter($event{DTSTART},'VALUE') eq "DATE" ) {
 						$allday = "true";
 					} else {
 						$allday = "false";
@@ -348,50 +328,17 @@ main:
 					my $repeatweekflags = 0;
 				
 					if(defined ($event{RRULE})){
-						my $icsfreq;
-						my $icsuntil;
-						my $icscount;
-						my $icsinterval;
-						my $icsbyday;
-						if(ref($event{RRULE}) ne "HASH"){
-							if(ref($event{RRULE}) eq "ARRAY"){
-								for(my $i=0;$i<=$#{$event{RRULE}};$i++){
-									debug("RRULE $i : $event{RRULE}[$i]");
-									if(ref($event{RRULE}[$i]) eq "HASH"){
-										debug("Hash keys ignored -> ");
-										while ((my $c, my $v) = each($event{RRULE}[$i])) {
-											debug("... $c => $v");
-										}
-									}else{
-										$icsfreq=$1 if $event{RRULE}[$i]=~s/FREQ=(.*?);//g;
-										$icsuntil=$1 if $event{RRULE}[$i]=~s/UNTIL=(.*?);//g;
-										$icscount=$1 if $event{RRULE}[$i]=~s/COUNT=(.*?);//g;
-										$icsinterval=$1 if $event{RRULE}[$i]=~s/INTERVAL=(.*?);//g;
-										$icsbyday=$1 if $event{RRULE}[$i]=~s/BYDAY=(.*?);//g;
-										debug("Found RRULE parameters from array :");
-										debug("icsfreq : $icsfreq");
-										debug("icsuntil : $icsuntil");
-										debug("icscount : $icscount");
-										debug("icsinterval : $icsinterval");
-										debug("icsbyday : $icsbyday");
-									}
-								}
-							}else{
-								debugwarn("RRULE is neither an array or a hash. It's a : ".ref($event{RRULE}));
-							}
-						}else{
-							$icsfreq=$event{RRULE}{'FREQ'} 		 if defined $event{RRULE}{'FREQ'};
-							$icsuntil=$event{RRULE}{'UNTIL'} 	 if defined $event{RRULE}{'UNTIL'};
-							$icscount=$event{RRULE}{'COUNT'} 	 if defined $event{RRULE}{'COUNT'};
-							$icsinterval=$event{RRULE}{'INTERVAL'} 	 if defined $event{RRULE}{'INTERVAL'};
-							$icsbyday=$event{RRULE}{'BYDAY'} 	 if defined $event{RRULE}{'BYDAY'};
-							debug("Found RRULE parameters from hash :");
-							debug("icsfreq : $icsfreq") if defined $event{RRULE}{'FREQ'};
-							debug("icsuntil : $icsuntil") if defined $event{RRULE}{'UNTIL'};
-							debug("icscount : $icscount") if defined $event{RRULE}{'COUNT'};
-							debug("icsinterval : $icsinterval") if defined $event{RRULE}{'INTERVAL'};
-							debug("icsbyday : $icsbyday") if defined $event{RRULE}{'BYDAY'};
-						}
+						my $icsfreq = getIcalParameter($event{RRULE}, 'FREQ');
+						my $icsuntil = getIcalParameter($event{RRULE}, 'UNTIL');
+						my $icscount = getIcalParameter($event{RRULE}, 'COUNT');
+						my $icsinterval = getIcalParameter($event{RRULE}, 'INTERVAL');
+						my $icsbyday = getIcalParameter($event{RRULE}, 'BYDAY');
+						debug("Found RRULE parameters from array :");
+						debug("icsfreq : $icsfreq");
+						debug("icsuntil : $icsuntil");
+						debug("icscount : $icscount");
+						debug("icsinterval : $icsinterval");
+						debug("icsbyday : $icsbyday");
 
 						if ($icsfreq ne '') {
 							$repeatrule = 1;
