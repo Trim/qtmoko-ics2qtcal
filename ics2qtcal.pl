@@ -248,11 +248,16 @@ main:
 			if ($ical->unfold($indexInFile) =~ /^UID.*:(.*)$/) {
 				my $uid = $1;
 				debug ("uid found : $uid - Reading the ical event");
-				my $event = $ical->toHash($indexInFile);
+				# Tie::iCal has structure :
+				#   $events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
+				# where VEVENT is the type of the iCal compenent (see rfc RFC 2445)
+				my @component = $ical->toHash($indexInFile);
 				debug ("Prepare the appointment recid=$recid");
 
+				if(@component[0] eq 'VEVENT'){
+					my %event = $component[1];
 				# Description
-				my $description = $event->[1]->{SUMMARY};
+				my $description = $event{SUMMARY};
 				# Ignore the possible language given in this line
 				if (ref($description) eq 'ARRAY') {
 					debug ("Ignoring the HASHes in the Summary line");
@@ -267,23 +272,23 @@ main:
 				debug ("description=$description");
 
 				# Process start date
-				my $startDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event->[1]->{DTSTART},0));
+				my $startDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event{DTSTART},0));
 				debug ("startDate=$startDate");
 
 				# Extract the TimeZone of start date
-				my $startDateTimeZone = extractTimeZoneFromIcalLine($event->[1]->{DTSTART});
+				my $startDateTimeZone = extractTimeZoneFromIcalLine($event{DTSTART});
 				debug ("startDateTimeZone=$startDateTimeZone");
 
 				# Process end date
-				my $endDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event->[1]->{DTEND},1));
+				my $endDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event{DTEND},1));
 				debug ("endDate=$endDate");
 
 				# Extract the TimeZone of end date
-				my $endDateTimeZone = extractTimeZoneFromIcalLine($event->[1]->{DTEND});
+				my $endDateTimeZone = extractTimeZoneFromIcalLine($event{DTEND});
 				debug ("endDateTimeZone=$endDateTimeZone");
 
 				# Process location
-				my $location = $event->[1]->{LOCATION};
+				my $location = $event{LOCATION};
 				# Ignore the possible language given in this line
 				if (ref($location) eq 'ARRAY') {
 					debug ("Ignoring the HASHes in the Location line");
@@ -299,7 +304,7 @@ main:
 
 				# Check if it's an all-day event
 				my $allday;
-				if ( (ref($event->[1]->{DTSTART}) eq 'ARRAY') && ($event->[1]->{DTSTART}->[0]{'VALUE'} eq "DATE") ) {
+				if ( (ref($event{DTSTART}) eq 'ARRAY') && ($event{DTSTART}->[0]{'VALUE'} eq "DATE") ) {
 					$allday = "true";
 				} else {
 					$allday = "false";
@@ -318,22 +323,22 @@ main:
 				my $icscount;
 				my $icsinterval;
 				my $icsbyday;
-				if(ref($event->[1]->{RRULE}) ne "HASH"){
-					if(ref($event->[1]->{RRULE}) eq "ARRAY"){
-						for(my $i=0;$i<=$#{$event->[1]->{RRULE}};$i++){
-							debug("RRULE $i : $event->[1]->{RRULE}[$i]");
-							if(ref($event->[1]->{RRULE}[$i]) eq "HASH"){
+				if(ref($event{RRULE}) ne "HASH"){
+					if(ref($event{RRULE}) eq "ARRAY"){
+						for(my $i=0;$i<=$#{$event{RRULE}};$i++){
+							debug("RRULE $i : $event{RRULE}[$i]");
+							if(ref($event{RRULE}[$i]) eq "HASH"){
 								debug("Hash keys -> ");
-								while ((my $c, my $v) = each($event->[1]->{RRULE}[$i])) {
+								while ((my $c, my $v) = each($event{RRULE}[$i])) {
 									debug("... $c => $v");
 								}
 							}else{
 								
-								$icsfreq=$1 if $event->[1]->{RRULE}[$i]=~s/FREQ=(.*?);//g;
-								$icsuntil=$1 if $event->[1]->{RRULE}[$i]=~s/UNTIL=(.*?);//g;
-								$icscount=$1 if $event->[1]->{RRULE}[$i]=~s/COUNT=(.*?);//g;
-								$icsinterval=$1 if $event->[1]->{RRULE}[$i]=~s/INTERVAL=(.*?);//g;
-								$icsbyday=$1 if $event->[1]->{RRULE}[$i]=~s/BYDAY=(.*?);//g;
+								$icsfreq=$1 if $event{RRULE}[$i]=~s/FREQ=(.*?);//g;
+								$icsuntil=$1 if $event{RRULE}[$i]=~s/UNTIL=(.*?);//g;
+								$icscount=$1 if $event{RRULE}[$i]=~s/COUNT=(.*?);//g;
+								$icsinterval=$1 if $event{RRULE}[$i]=~s/INTERVAL=(.*?);//g;
+								$icsbyday=$1 if $event{RRULE}[$i]=~s/BYDAY=(.*?);//g;
 								debug("NOT HASH");
 								debug("icsfreq : $icsfreq");
 								debug("icsuntil : $icsuntil");
@@ -344,17 +349,17 @@ main:
 						}
 					}
 				}else{
-					$icsfreq=$event->[1]->{RRULE}{'FREQ'} 		 if defined $event->[1]->{RRULE}{'FREQ'};
-					$icsuntil=$event->[1]->{RRULE}{'UNTIL'} 	 if defined $event->[1]->{RRULE}{'UNTIL'};
-					$icscount=$event->[1]->{RRULE}{'COUNT'} 	 if defined $event->[1]->{RRULE}{'COUNT'};
-					$icsinterval=$event->[1]->{RRULE}{'INTERVAL'} 	 if defined $event->[1]->{RRULE}{'INTERVAL'};
-					$icsbyday=$event->[1]->{RRULE}{'BYDAY'} 	 if defined $event->[1]->{RRULE}{'BYDAY'};
+					$icsfreq=$event{RRULE}{'FREQ'} 		 if defined $event{RRULE}{'FREQ'};
+					$icsuntil=$event{RRULE}{'UNTIL'} 	 if defined $event{RRULE}{'UNTIL'};
+					$icscount=$event{RRULE}{'COUNT'} 	 if defined $event{RRULE}{'COUNT'};
+					$icsinterval=$event{RRULE}{'INTERVAL'} 	 if defined $event{RRULE}{'INTERVAL'};
+					$icsbyday=$event{RRULE}{'BYDAY'} 	 if defined $event{RRULE}{'BYDAY'};
 					debug("HASH");
-					debug("icsfreq : $icsfreq") if defined $event->[1]->{RRULE}{'FREQ'};
-					debug("icsuntil : $icsuntil") if defined $event->[1]->{RRULE}{'UNTIL'};
-					debug("icscount : $icscount") if defined $event->[1]->{RRULE}{'COUNT'};
-					debug("icsinterval : $icsinterval") if defined $event->[1]->{RRULE}{'INTERVAL'};
-					debug("icsbyday : $icsbyday") if defined $event->[1]->{RRULE}{'BYDAY'};
+					debug("icsfreq : $icsfreq") if defined $event{RRULE}{'FREQ'};
+					debug("icsuntil : $icsuntil") if defined $event{RRULE}{'UNTIL'};
+					debug("icscount : $icscount") if defined $event{RRULE}{'COUNT'};
+					debug("icsinterval : $icsinterval") if defined $event{RRULE}{'INTERVAL'};
+					debug("icsbyday : $icsbyday") if defined $event{RRULE}{'BYDAY'};
 				}
 
 				if ($icsfreq ne '') {
@@ -380,7 +385,7 @@ main:
 					elsif ($icscount ne '') {
 						my $count = $icscount;
 						# Compute the ical date corresponding to the start date
-						my $icaldate = DateTime::Format::ICal->parse_datetime(extractDateFromIcalLine($event->[1]->{DTSTART},0));
+						my $icaldate = DateTime::Format::ICal->parse_datetime(extractDateFromIcalLine($event{DTSTART},0));
 						my $icallastdateaftercount;
 						if ($repeatrule == 1) {
 						    my $icalrec = DateTime::Event::ICal->recur(
@@ -462,7 +467,7 @@ main:
 
 				# Process note : if there is one, we must create a specially encoded file with its content, and add a line in APPOINTMENTCUSTOM table
 				if ($notesDirectory ne '') {
-					my $note = $event->[1]->{DESCRIPTION};
+					my $note = $event{DESCRIPTION};
 					if (ref($note) eq 'ARRAY') {
 						# In case there is an unescaped comma in the string (that should not happen) : take the string before the comma
 						$note = $note->[0];
@@ -528,10 +533,11 @@ main:
 					debug ("elapsed for last 100 events=". (time - $time)." seconds");
 					$time = time;
 				}
-			}
-		}
+				}#end if condition which check that component is a VEVENT
+			}#end if condition which find UID number while unfolding
+		}#end if condition  which find UID string
 		$indexInFile++;
-	}
+	}#end for loop reading lines
 
 	# Commit and close Qtopia database
 	$dbh->commit();
