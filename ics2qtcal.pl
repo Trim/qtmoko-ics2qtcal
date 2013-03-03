@@ -254,14 +254,20 @@ main:
 	my $time = time;
 	
 	# Loop through ical Events
-	while(my($uid, %event) = each(%allevents)){
+	while(my($uid, $icalref) = each(%allevents)){
+				my @icalobject = @{$icalref};
 				debug ("uid found : $uid - Reading the ical event");
 				# Tie::iCal has structure :
 				#   $events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
 				# where VEVENT is the type of the iCal compenent (see rfc RFC 2445)
-				my @component = @{$allevents{$uid}};
-				debug ("Prepare the $component[0] ical object recid=$recid");
-				if($component[0] eq 'VEVENT'){
+				# In our case we've :
+				#   %allevevents = { $uid => @icalobject}
+				#	and $icalobject = [$icalType, %icalProperties]
+				my $icalType = $icalobject[0];
+				my $icalProperties = $icalobject[1];
+				debug ("Prepare the $icalType ical object recid=$recid");
+				if($icalType eq 'VEVENT'){
+					my %event=%{$icalProperties};
 					# Description
 					my $description = $event{SUMMARY};
 					# Ignore the possible language given in this line
