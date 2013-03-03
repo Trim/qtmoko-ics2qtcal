@@ -183,7 +183,7 @@ sub repeatWeekFlagFromDayOfWeek {
 sub getIcalParameter{
 	my ($content, $param) = @_;
 	my $result;
-	if(ref(\$content) eq 'SCALAR'){ #single value (need to check by caller)
+	if(ref(\$content) eq 'SCALAR'){ #single value (need to be checked by caller)
 		$result=$content;
 	}elsif(ref($content) eq 'HASH'){ #impossible
 		$result=$content->{$param};
