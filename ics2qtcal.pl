@@ -254,7 +254,7 @@ main:
 	my $time = time;
 	
 	# Loop through ical Events
-	while(my($uid, $event) = each(%allevents)){
+	while(my($uid, %event) = each(%allevents)){
 				debug ("uid found : $uid - Reading the ical event");
 				# Tie::iCal has structure :
 				#   $events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
@@ -262,7 +262,6 @@ main:
 				my @component = @{$allevents{$uid}};
 				debug ("Prepare the $component[0] ical object recid=$recid");
 				if($component[0] eq 'VEVENT'){
-					my %event = %{$component[1]};
 					# Description
 					my $description = $event{SUMMARY};
 					# Ignore the possible language given in this line
