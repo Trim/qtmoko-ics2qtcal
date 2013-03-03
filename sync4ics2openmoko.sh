@@ -12,8 +12,12 @@ do	case "$option" in
 done
 shift `expr $OPTIND - 1`
 
+icaldb="/home/root/Applications/Qtopia/qtopia_db.sqlite"
+tmpnotes="./Annotator-tmp"
+notes="/home/root/Applications/Annotator/"
+
 echo "Creating a backup copy of qtopia_db.sqlite"
-cp /home/root/Applications/Qtopia/qtopia_db.sqlite ./qtopia_db.sqlite.bak
+cp "$icaldb" ./qtopia_db.sqlite.bak
 
 echo "Fetching files"
 for fileurl in $*
@@ -27,11 +31,11 @@ do
 done
 
 echo "Deleting appointments of qtopia_db"
-perl deleteqtcalappointments.pl /home/root/Applications/Qtopia/qtopia_db.sqlite
+perl deleteqtcalappointments.pl "$icaldb"
 
 echo "Deleting temporary Notes files from a previous execution"
-rm ./Annotator-tmp/*
-mkdir -p Annotator-tmp
+rm "${tmpnotes}"/*
+mkdir -p "${tmpnotes}"
 
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
@@ -44,10 +48,10 @@ do
 done;
 
 echo "Removing existing Note files"
-rm -f /home/root/Applications/Annotator/0-*
+rm -f "${notes}"/0-*
 
 echo "Copying Note files"
-cp ./Annotator-tmp/* /home/root/Applications/Annotator/
+cp "${tmpnotes}"/* "${notes}"
 
 echo "Removing *.ics local files"
 rm *.ics
