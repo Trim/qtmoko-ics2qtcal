@@ -208,10 +208,10 @@ main:
 {
 	# Read the iCal file
 	debug ("Read the iCal file $icsFile");
-	open FILE, "<$icsFile" or die "Failed to tie file $icsFile !\n";
-	my @lines = <FILE> ;
+	#open FILE, "<$icsFile" or die "Failed to tie file $icsFile !\n";
+	#my @lines = <FILE> ;
 	# Remove end of lines
-	chomp @lines;
+	#chomp @lines;
 
 	# Check that the notesdirectory parameter is a real directory
 	if ($notesDirectory ne '') {
@@ -222,11 +222,13 @@ main:
 	}
 
 	debug ("Initialize the Tie::iCal structure");
-	my $ical = {};
-	bless $ical, "Tie::iCal";	
-	$ical->{A} = \@lines;
+	#my $ical = {};
+	#bless $ical, "Tie::iCal";	
+	#$ical->{A} = \@lines;
 	# Put Tie::iCal in debug mode if verbose mode is set
-	$ical->{debug} = $verbose;
+	#$ical->{debug} = $verbose;
+	my %allevents;
+	tie %allevents, 'Tie::iCal', "$icsFile", 'debug'=>0 or die "Failed to tie file!\n";
 
 	# Connect to the Qtopia database
 	debug ("Connect to database $destDb");
@@ -252,16 +254,12 @@ main:
 	my $time = time;
 	
 	# Loop through ical Events
-	my $indexInFile = 0;
-	for my $line (@lines) {
-		if (substr($line, 0, 3) eq 'UID') {
-			if ($ical->unfold($indexInFile) =~ /^UID.*:(.*)$/) {
-				my $uid = $1;
+	while(my($uid, $event) = each(%allevents)){
 				debug ("uid found : $uid - Reading the ical event");
 				# Tie::iCal has structure :
 				#   $events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
 				# where VEVENT is the type of the iCal compenent (see rfc RFC 2445)
-				my @component = @{$ical->toHash($indexInFile)};
+				my @component = @{$allevents{$uid}};
 				debug ("Prepare the $component[0] ical object recid=$recid");
 				if(@component[0] eq 'VEVENT'){
 					my %event = %{$component[1]};
@@ -518,11 +516,8 @@ main:
 						$time = time;
 					}
 				}#end if condition which check that component is a VEVENT
-			}#end if condition which find UID number while unfolding
-		}#end if condition  which find UID string
-		$indexInFile++;
-	}#end for loop reading lines
 
+	}#end while loop to read all events
 	# Commit and close Qtopia database
 	$dbh->commit();
 	# Workaround to avoid warnings from $dbh->disconnect()
