@@ -16,8 +16,9 @@ if [ -n $icsfile ] || [ -n $caldb ]; then
     echo "Creating temporary copy of $icsfile with valid lines into db $caldb"
     # Create a copy and remove X-MOZ-LASTACK lines that are not understood by Tie::iCal
     grep -v X-MOZ-LASTACK "${icsfile}" >"${icsfile}.tmp"
-    # Normalize line endings to unix format (line feed only)
-    sed -e 's/\r$//g' "${icsfile}.tmp" >"${icsfile}-2.tmp"
+    # Normalize line endings to unix format (line feed only) (not needed ?)
+    #sed -e 's/\r$//g' "${icsfile}.tmp" >"${icsfile}-2.tmp"
+    cp ${icsfile}.tmp ${icsfile}-2.tmp;
 
     echo "Processing file $icsfile"
     perl ics2qtcal.pl -- "$verbose" --ical "${icsfile}-2.tmp" --qtopiadb "$caldb" --notesdirectory "./Annotator-tmp"
