@@ -40,10 +40,15 @@ mkdir -p "${tmpnotes}"
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
 do
+    echo "Creating temporary copy of $filename with valid lines into db $caldb"
+    # Create a copy and remove X-MOZ-LASTACK lines that are not understood by Tie::iCal
+    # FIXME Check if really needed with latest scripts
+    grep -v X-MOZ-LASTACK "${filename}" > "${filename}.tmp"
+    
     if [ -n "$verbose" ] ; then
-        ./ics2qtcal.sh -v "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+        perl ics2qtcal.pl -- -v --ical "${filename}.tmp" --qtopiadb "$icaldb" --notesdirectory "$tmpnotes"
     else
-        ./ics2qtcal.sh "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+        perl ics2qtcal.pl -- --ical "${filename}.tmp" --qtopiadb "$icaldb" --notesdirectory "$tmpnotes"
     fi
 done;
 
@@ -53,7 +58,8 @@ rm -f "${notes}"/0-*
 echo "Copying Note files"
 cp "${tmpnotes}"/* "${notes}"
 
-echo "Removing *.ics local files"
+echo "Removing *.ics local files and *.ics.tmp temporary files"
 rm *.ics
+rm *.ics.tmp
 
 echo "Done"
