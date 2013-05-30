@@ -49,9 +49,9 @@ do
     grep -v X-MOZ-LASTACK "${filename}" > "${filename}.tmp"
 
     if [ -n "$verbose" ] ; then
-        perl ics2qtcal.pl -- -v --ical "${filename}.tmp" --qtopiadb "$icaldb" --notesdirectory "$tmpnotes"
+        ics2qtcal.pl -- -v --ical "${filename}.tmp" --qtopiadb "$icaldb" --notesdirectory "$tmpnotes"
     else
-        perl ics2qtcal.pl -- --ical "${filename}.tmp" --qtopiadb "$icaldb" --notesdirectory "$tmpnotes"
+        ics2qtcal.pl -- --ical "${filename}.tmp" --qtopiadb "$icaldb" --notesdirectory "$tmpnotes"
     fi
 done;
 
