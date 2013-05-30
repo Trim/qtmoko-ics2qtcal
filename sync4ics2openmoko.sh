@@ -11,6 +11,9 @@ do	case "$option" in
 	esac
 done
 shift `expr $OPTIND - 1`
+mytmp="/tmp/ics2qtcal-`date +%H%M%S`"
+mkdir $mytmp
+cd $mytmp
 
 icaldb="/home/root/Applications/Qtopia/qtopia_db.sqlite"
 tmpnotes="./Annotator-tmp"
@@ -26,12 +29,12 @@ do
     if [ -z "$server" ]; then
 	    wget --no-check-certificate --user="$user" --password="$password" "$fileurl" -O "`basename ${fileurl%%.ics}`_`date +%Y%m%d_%H%M%S`.ics"
 	else
-	    wget --no-check-certificate --user="$user" --password="$password" "${server}/${fileurl}" -O "`basename ${fileurl%%.ics}`_`date +%Y%m%d_%H%M%S`.ics"
+	    wget --no-check-certificate --user="$user" --password="$password" ${server}/${fileurl} -O "`basename ${fileurl%%.ics}`_`date +%Y%m%d_%H%M%S`.ics"
 	fi
 done
 
-echo "Deleting appointments of qtopia_db"
-perl deleteqtcalappointments.pl "$icaldb"
+#echo "Deleting appointments of qtopia_db"
+#perl deleteqtcalappointments.pl "$icaldb"
 
 echo "Deleting temporary Notes files from a previous execution"
 rm "${tmpnotes}"/*
@@ -44,7 +47,7 @@ do
     # Create a copy and remove X-MOZ-LASTACK lines that are not understood by Tie::iCal
     # FIXME Check if really needed with latest scripts
     grep -v X-MOZ-LASTACK "${filename}" > "${filename}.tmp"
-    
+
     if [ -n "$verbose" ] ; then
         perl ics2qtcal.pl -- -v --ical "${filename}.tmp" --qtopiadb "$icaldb" --notesdirectory "$tmpnotes"
     else
