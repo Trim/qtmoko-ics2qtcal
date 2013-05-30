@@ -16,19 +16,19 @@ It can run on a standard computer, or on the phone itself.
 In current version, it downloads one ore several .ics files through HTTP(S), and stores their content into the SQLite database (/home/root/Applications/Qtopia/qtopia_db.sqlite , __replacing__ and removing existing appointments).
 It also creates the Note files for each appointment description, in the directory where they are expected by QtMoko : /home/root/Applications/Annotator/
 
-*** Usage on QtMoko (tested on v52):
+### Usage on QtMoko (tested on v52):
 - Copy all the files in a directory of your phone (you can use git clone if you've install git or [download zip file](https://www.adorsaz.ch/public/downloads/qtmoko-ics2qtcal/))
 - Install the necessary Perl packages by running install_dependencies.sh on the phone
 - Run the script sync4ics2openmoko.sh [-u user] [-p password] [-s serverurl] fileurl1 fileurl2 ...
 
 The optional user/password is given to the HTTP server if it needs authentication
 
-**** Examples
+#### Examples
 - sync4ics2openmoko.sh (will parse all local files with extension .ics)
 - sync4ics2openmoko.sh -u 'myuser' -p 'mypassword' -s https://myserver/mypath/ myfile1 myfile2 myfile3 
 - sync4ics2openmoko.sh -u 'myuser' -p 'mypassword' -s https://myserver/ mypath1/myfile1 mypath1/myfile2 anotherpath/myfile3 
 
-*** Usage on Desktop
+### Usage on Desktop
 Usage on a standard computer (tested on Ubuntu 10.04) : same steps, except that you need to use remotesync4ics2openmoko.sh instead and connect your phone with IP 192.168.0.202.
 
 How does it work ?
