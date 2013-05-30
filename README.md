@@ -49,7 +49,7 @@ Suggestions/bugs
 ----------------
 
 Please send any suggestion/bug report to mossroy.mossroy AT gmail DOT com , adrien AT adorsaz DOT ch or use github tools
-You can give small donations through [our Flattrhttps](http://flattr.com/thing/104780/ics2qtcal-Perl-script-to-synchronize-ics-files-with-QtMoko-calendar-on-a-FreeRunner)
+You can give small donations through [our Flattr](https://flattr.com/thing/104780/ics2qtcal-Perl-script-to-synchronize-ics-files-with-QtMoko-calendar-on-a-FreeRunner)
 
 License
 -------
