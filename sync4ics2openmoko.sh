@@ -11,6 +11,8 @@ do	case "$option" in
 	esac
 done
 shift `expr $OPTIND - 1`
+
+# Work in tmpdir
 mytmp="/tmp/ics2qtcal-`date +%H%M%S`"
 mkdir $mytmp
 cd $mytmp

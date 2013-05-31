@@ -12,8 +12,22 @@ do	case "$option" in
 done
 shift `expr $OPTIND - 1`
 
+# Work in tmpdir
+mytmp="/tmp/ics2qtcal-`date +%H%M%S`"
+mkdir $mytmp
+cd $mytmp
+
+# Main configuration
+icaldb="/home/root/Applications/Qtopia/qtopia_db.sqlite"
+tmpnotes="./Annotator-tmp"
+notes="/home/root/Applications/Annotator/"
+
+# Remote configuration
+REMOTE_USER='root'
+REMOTE_IP='192.168.0.202'
+
 echo "Fetching qtopia_db.sqlite from FreeRunner"
-scp root@192.168.0.202:/home/root/Applications/Qtopia/qtopia_db.sqlite .
+scp ${REMOTE_USER}@${REMOTE_IP}:${icaldb} .
 
 echo "Fetching files"
 for fileurl in $*
@@ -29,31 +43,31 @@ done
 echo "Making a backup copy of qtopia_db"
 cp qtopia_db.sqlite qtobia_db.sqlite.bak
 
-echo "Deleting appointments of qtopia_db"
-perl deleteqtcalappointments.pl qtopia_db.sqlite
+#echo "Deleting appointments of qtopia_db"
+#perl deleteqtcalappointments.pl qtopia_db.sqlite
 
 echo "Deleting temporary Notes files from a previous execution"
-rm ./Annotator-tmp/*
-mkdir -p Annotator-tmp
+rm ${tmpnotes}/*
+mkdir -p ${tmpnotes}
 
 echo "Transferring events to qtopia_db"
 for filename in ./*.ics
 do
     if [ -n "$verbose" ] ; then
-        ./ics2qtcal.sh -v "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+        ./ics2qtcal.sh -v "$filename" ${icaldb}
     else
-        ./ics2qtcal.sh "$filename" /home/root/Applications/Qtopia/qtopia_db.sqlite
+        ./ics2qtcal.sh "$filename" ${icaldb}
     fi
 done;
 
 echo "Transferring qtopia_db.sqlite back to the FreeRunner"
-scp qtopia_db.sqlite root@192.168.0.202:/home/root/Applications/Qtopia/
+scp qtopia_db.sqlite ${REMOTE_USER}@${REMOTE_IP}:/home/root/Applications/Qtopia/
 
 echo "Removing existing Note files on the FreeRunner"
-ssh root@192.168.0.202 "rm -f /home/root/Applications/Annotator/0-*"
+ssh ${REMOTE_USER}@${REMOTE_IP} "rm -f ${notes}0-*"
 
 echo "Transferring Note files to the FreeRunner"
-scp -q Annotator-tmp/* root@192.168.0.202:/home/root/Applications/Annotator/
+scp -q Annotator-tmp/* ${REMOTE_USER}@${REMOTE_IP}:${notes}
 
 echo "Removing *.ics local files"
 rm *.ics
