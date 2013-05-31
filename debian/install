@@ -1,4 +1,0 @@
-deleteqtcalappointments.pl opt/qtmoko/bin
-ics2qtcal.pl opt/qtmoko/bin
-sync4ics2openmoko.sh opt/qtmoko/bin
-remotesync4ics2openmoko.sh opt/qtmoko/bin
