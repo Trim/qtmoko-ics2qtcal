@@ -1,2 +1,4 @@
-ics
-tmp
+# Ignore saved file and test files
+*~
+*.ics
+*.tmp
