@@ -1,0 +1,17 @@
+Source: qtmoko-ics2qtcal
+Section: main
+Priority: optional
+Maintainer: Adrien Dorsaz <adrien@adorsaz.ch>
+Build-Depends: debhelper (>= 8.0.0);
+Standards-Version: 3.9.4
+Homepage: https://github.com/Trim/qtmoko-ics2qtcal/
+Vcs-Git: git://github.com/Trim/qtmoko-ics2qtcal.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/qtmoko-ics2qtcal.git;a=summary
+
+Package: qtmoko-ics2qtcal
+Architecture: all
+Depends: libdbd-sqlite3-perl (>=1.29-3), libtie-ical-perl (>=0.13-1), libdatetime-format-ical-perl (>=0.09-1)
+Recommends: perl-doc
+Description: Import ics files in QtMoko's calendar
+ Import ics files in QtMoko's calendar; ics files can be automaticly fetched from the web
+ like Google Calendar, Davical server, ...
