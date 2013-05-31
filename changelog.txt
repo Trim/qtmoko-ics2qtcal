@@ -32,6 +32,13 @@ v0.7.2 (2013-02-20)
 - Fix bugs with recurence manipulation
 - Fix some bugs with script invokations
 
+v0.7.3 (2013-05-31)
+- remove ics2qtcal.sh to improve execution time on OpenMoko
+- use variables in shell scripts
+- work in /tmp
+- don't purge automatically database to be able to use the script in graphical application (see Trim/getcal)
+- use Tie::iCal as proposed in documentation 
+
 TODO for next versions :
 - add attendees to the event descriptions
 - handle event categories
