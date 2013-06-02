@@ -27,6 +27,18 @@ v0.7 (2013-02-07)
 - Fix repetition rules for last Qtmoko (v52)
 - Replace depreciated feature Date::Ical by DateTime library as first one will be removed from next debian stable
 
+v0.7.2 (2013-02-20)
+- Remove some assumptions to retrieve date and timezone
+- Fix bugs with recurence manipulation
+- Fix some bugs with script invokations
+
+v0.7.3 (2013-05-31)
+- remove ics2qtcal.sh to improve execution time on OpenMoko
+- use variables in shell scripts
+- work in /tmp
+- don't purge automatically database to be able to use the script in graphical application (see Trim/getcal)
+- use Tie::iCal as proposed in documentation 
+
 TODO for next versions :
 - add attendees to the event descriptions
 - handle event categories

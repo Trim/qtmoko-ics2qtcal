@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -ls
 
 use strict;
 
@@ -21,7 +21,7 @@ BEGIN {
 	) {
 		pod2usage(-verbose => 2);
 		exit;
-	}	
+	}
 }
 
 
@@ -40,7 +40,12 @@ $DBD::SQLite::COLLATION{NOCASE} = sub { $_[0] cmp $_[1] };
 
 # Print a debug message if the verbose mode is on
 sub debug {
-	print STDERR $_[0]."\n" if $verbose;
+	print STDERR "INFO : ".$_[0] if $verbose;
+}
+
+# Print a warning debug message if the verbose mode is on
+sub debugwarn {
+	print STDERR "WARN : ".$_[0] if $verbose;
 }
 
 
@@ -84,29 +89,23 @@ sub createNoteFile {
 # second parameter : is this an end date (1) or start date (0) ?
 sub extractDateFromIcalLine {
 	my $date;
-	my $end = $_[1];
-	if (ref($_[0]) eq '') {
-		$date = $_[0];
-	}
-	elsif (ref($_[0]) eq 'ARRAY') {
-		$date = $_[0]->[1]; # big assumption?
-	}
-	else {
-		print ("Unrecognized ical date format");
-		return undef;
-	}
+	my ($icsDate, $end) = @_;
+	
+	$date=getIcalParameter($icsDate, "\\d{8}T\\d{6}");
+	debug("Found date : $date");
+	
 	if (length($date) == 8) {
 		if ($end == 0) {
 			# It is a start date : it starts at midnight
 			return $date . "T000000";
 		}
 		else {
-            # It is an end date : it ends just before midnight of the day before
-            my $dt = DateTime::Format::ICal->parse_datetime($date."T235900");
-            my $yesterday = $dt;
-            $yesterday->set_day($dt->day-1);
-            $yesterday->set_time_zone("local");
-            return DateTime::Format::ICal->format_datetime($yesterday);
+			# It is an end date : it ends just before midnight of the day before
+			my $dt = DateTime::Format::ICal->parse_datetime($date."T235900");
+			my $yesterday = $dt;
+			$yesterday->set_day($dt->day-1);
+			$yesterday->set_time_zone("local");
+			return DateTime::Format::ICal->format_datetime($yesterday);
 		}
 	}
 	else {
@@ -119,20 +118,25 @@ sub extractDateFromIcalLine {
 
 # This function extracts the timezone from an ical start or end date
 # Currently, it only supports the distinction between local time and UTC
-# TODO : implement all the timezone specification of ics specification
+# TODO : check which time zones are good values for qtmoko database
 # first parameter : the array given by Tie::iCal
 sub extractTimeZoneFromIcalLine {
+	my ($icsDate) = @_;
 	my $date;
 	my $tz;
-	if (ref($_[0]) eq '') {
-		$date = $_[0];
+
+	$tz=getIcalParameter($icsDate, 'TZID');
+	
+	# If we receive a date, so the timezone is defined by last character
+	if($tz=~/\d{8}T\d{6}/){
+		if($tz=~/Z$/){
+			$tz="UTC"; # Z means UTC timezone
+		}else{
+			$tz=''; #else that's a local timezone and we put nothing.
+		}
 	}
-	elsif (ref($_[0]) eq 'ARRAY') {
-		$date = $_[0]->[1]; # big assumption?
-	}
-	if ($date =~ /Z$/) {
-		$tz = "UTC";
-	}
+
+	debug("Found timezone (empty for local timezone) : $tz");
 	return $tz;
 }
 
@@ -175,15 +179,39 @@ sub repeatWeekFlagFromDayOfWeek {
 	return $repeatweekflags;
 }
 
+# Find a parameter in a certain content line
+sub getIcalParameter{
+	my ($content, $param) = @_;
+	my $result;
+	if(ref(\$content) eq 'SCALAR'){ #single value (need to be checked by caller)
+		$result=$content;
+	}elsif(ref($content) eq 'HASH'){ #impossible
+		$result=$content->{$param};
+	}elsif(ref($content) eq 'ARRAY'){
+		for my $cont (@$content){
+			if(ref($cont) eq 'HASH' && defined($cont->{$param})){
+				$result=$cont->{$param};
+			}elsif(ref(\$cont) eq 'SCALAR' && $cont=~/$param/){
+				if($cont=~/$param=(.*?);/){
+					$result=$1;
+				}else{
+					$result=$cont;
+				}
+			}
+		}
+	}
+	debug("Found parameter $param with value :$result");
+	return $result;
+}
 
 main:
 {
 	# Read the iCal file
 	debug ("Read the iCal file $icsFile");
-	open FILE, "<$icsFile" or die "Failed to tie file $icsFile !\n";
-	my @lines = <FILE> ;
+	#open FILE, "<$icsFile" or die "Failed to tie file $icsFile !\n";
+	#my @lines = <FILE> ;
 	# Remove end of lines
-	chomp @lines;
+	#chomp @lines;
 
 	# Check that the notesdirectory parameter is a real directory
 	if ($notesDirectory ne '') {
@@ -194,11 +222,13 @@ main:
 	}
 
 	debug ("Initialize the Tie::iCal structure");
-	my $ical = {};
-	bless $ical, "Tie::iCal";	
-	$ical->{A} = \@lines;
+	#my $ical = {};
+	#bless $ical, "Tie::iCal";	
+	#$ical->{A} = \@lines;
 	# Put Tie::iCal in debug mode if verbose mode is set
-	$ical->{debug} = $verbose;
+	#$ical->{debug} = $verbose;
+	my %allevents;
+	tie %allevents, 'Tie::iCal', "$icsFile", 'debug'=>0 or die "Failed to tie file!\n";
 
 	# Connect to the Qtopia database
 	debug ("Connect to database $destDb");
@@ -224,251 +254,275 @@ main:
 	my $time = time;
 	
 	# Loop through ical Events
-	my $indexInFile = 0;
-	for my $line (@lines) {
-		if (substr($line, 0, 3) eq 'UID') {
-			if ($ical->unfold($indexInFile) =~ /^UID.*:(.*)$/) {
-				my $uid = $1;
+	while(my($uid, $icalref) = each(%allevents)){
+				my @icalobject = @{$icalref};
 				debug ("uid found : $uid - Reading the ical event");
-				my $event = $ical->toHash($indexInFile);
-				debug ("Prepare the appointment recid=$recid");
-
-				# Description
-				my $description = $event->[1]->{SUMMARY};
-				# Ignore the possible language given in this line
-				if (ref($description) eq 'ARRAY') {
-					debug ("Ignoring the HASHes in the Summary line");
-					my $indexInDescription = 0;
-					# Take the first string in the line (ignoring all the HASHes)
-					while (ref($description->[$indexInDescription]) eq 'HASH') {
-						$indexInDescription ++;
-					}
-					$description = $description->[$indexInDescription];
-				}
-				$description = convertICalStringToHTMLNote ($description);
-				debug ("description=$description");
-
-				# Process start date
-				my $startDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event->[1]->{DTSTART},0));
-				debug ("startDate=$startDate");
-
-				# Extract the TimeZone of start date
-				my $startDateTimeZone = extractTimeZoneFromIcalLine($event->[1]->{DTSTART});
-				debug ("startDateTimeZone=$startDateTimeZone");
-
-				# Process end date
-				my $endDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event->[1]->{DTEND},1));
-				debug ("endDate=$endDate");
-
-				# Extract the TimeZone of end date
-				my $endDateTimeZone = extractTimeZoneFromIcalLine($event->[1]->{DTEND});
-				debug ("endDateTimeZone=$endDateTimeZone");
-
-				# Process location
-				my $location = $event->[1]->{LOCATION};
-				# Ignore the possible language given in this line
-				if (ref($location) eq 'ARRAY') {
-					debug ("Ignoring the HASHes in the Location line");
-					my $indexInLocation = 0;
-					# Take the first string in the line (ignoring all the HASHes)
-					while (ref($location->[$indexInLocation]) eq 'HASH') {
-						$indexInLocation ++;
-					}
-					$location = $location->[$indexInLocation];
-				}
-				$location = convertICalStringToHTMLNote ($location);
-				debug ("location=$location");
-
-				# Check if it's an all-day event
-				my $allday;
-				if ( (ref($event->[1]->{DTSTART}) eq 'ARRAY') && ($event->[1]->{DTSTART}->[0]{'VALUE'} eq "DATE") ) {
-					$allday = "true";
-				} else {
-					$allday = "false";
-				}
-				debug ("allday=$allday");
-
-				# Process repeat rules
-				# TODO probable fixes needed to implement the complete RFC
-				my $repeatrule = 0;
-				my $repeatfrequency = 1;
-				my $repeatenddate = undef;
-				my $repeatweekflags = 0;
-				if ($event->[1]->{RRULE}{'FREQ'} ne '') {
-					$repeatrule = 1;
-					if ($event->[1]->{RRULE}{'FREQ'} eq "DAILY") {
-						$repeatrule = 1;
-					}
-					elsif ($event->[1]->{RRULE}{'FREQ'} eq "WEEKLY") {
-						$repeatrule = 2;
-					}
-					elsif ($event->[1]->{RRULE}{'FREQ'} eq "MONTHLY") {
-						$repeatrule = 4;  # which can be replaced by 4 or 6 depending on the BYDAY value
-					}
-					elsif ($event->[1]->{RRULE}{'FREQ'} eq "YEARLY") {
-						$repeatrule = 5;
-					}
-					debug ("frequency=".$event->[1]->{RRULE}{'FREQ'}." => repeatrule=$repeatrule");
-					if ($event->[1]->{RRULE}{'UNTIL'} ne '') {
-						$repeatenddate = $event->[1]->{RRULE}{'UNTIL'};
-						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
-						debug ("repeatenddate=$repeatenddate");
-					}
-					elsif ($event->[1]->{RRULE}{'COUNT'} ne '') {
-						my $count = $event->[1]->{RRULE}{'COUNT'};
-						# Compute the ical date corresponding to the start date
-						my $icaldate = DateTime::Format::ICal->new (ical => extractDateFromIcalLine($event->[1]->{DTSTART},0));
-						my $icallastdateaftercount;
-						if ($repeatrule == 1) {
-						    my $icalrec = DateTime::Event::ICal->new(
-						        dtstart => $icaldate,
-						        freq => "daily",
-						        count => $count
-						    );
-							$icallastdateaftercount = $icalrec->dtend;
+				# Tie::iCal has structure :
+				#   $events{'a_unique_uid'} = ['VEVENT', {'NAME1' => 'VALUE1'}]
+				# where VEVENT is the type of the iCal compenent (see rfc RFC 2445)
+				# In our case we've :
+				#   %allevevents = { $uid => @icalobject}
+				#	and $icalobject = [$icalType, %icalProperties]
+				my $icalType = $icalobject[0];
+				my $icalProperties = $icalobject[1];
+				debug ("Prepare the $icalType ical object recid=$recid");
+				if($icalType eq 'VEVENT'){
+					my %event=%{$icalProperties};
+					# Description
+					my $description = $event{SUMMARY};
+					# Ignore the possible language given in this line
+					if (ref($description) eq 'ARRAY') {
+						debugwarn ("Ignoring the HASHes in the Summary line");
+						my $indexInDescription = 0;
+						# Take the first string in the line (ignoring all the HASHes)
+						while (ref($description->[$indexInDescription]) eq 'HASH') {
+							$indexInDescription ++;
 						}
-						if ($repeatrule == 2) {
-						    my $icalrec = DateTime::Event::ICal->new(
-						        dtstart => $icaldate,
-						        freq => "weekly",
-						        count => $count
-						    );
-							$icallastdateaftercount = $icalrec->dtend;
-						}
-						if ($repeatrule == 4) {
-						    my $icalrec = DateTime::Event::ICal->new(
-						        dtstart => $icaldate,
-						        freq => "monthly",
-						        count => $count
-						    );
-							$icallastdateaftercount = $icalrec->dtend;
-						}
-						if ($repeatrule == 5) {
-						    my $icalrec = DateTime::Event::ICal->new(
-						        dtstart => $icaldate,
-						        freq => "yearly",
-						        count => $count
-						    );
-							$icallastdateaftercount = $icalrec->dtend;
-						}
-						$repeatenddate = DateTime::Format::ICal->format_datetime($icallastdateaftercount);
-						$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
-						debug ("count=$count => repeatenddate=$repeatenddate");
+						$description = $description->[$indexInDescription];
 					}
-					if ($event->[1]->{RRULE}{'INTERVAL'} ne '') {
-						$repeatfrequency = $event->[1]->{RRULE}{'INTERVAL'};
-						debug ("repeatfrequency=$repeatfrequency");
+					$description = convertICalStringToHTMLNote ($description);
+					debug ("description=$description");
+
+					# Process start date
+					my $startDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event{DTSTART},0));
+					debug ("startDate=$startDate");
+
+					# Extract the TimeZone of start date
+					my $startDateTimeZone = extractTimeZoneFromIcalLine($event{DTSTART});
+					debug ("startDateTimeZone=$startDateTimeZone");
+
+					# Process end date
+					my $endDate = reformatICSDateTimeToSQLiteTimestamp(extractDateFromIcalLine($event{DTEND},1));
+					debug ("endDate=$endDate");
+
+					# Extract the TimeZone of end date
+					my $endDateTimeZone = extractTimeZoneFromIcalLine($event{DTEND});
+					debug ("endDateTimeZone=$endDateTimeZone");
+
+					# Process location
+					my $location = $event{LOCATION};
+					# Ignore the possible language given in this line
+					if (ref($location) eq 'ARRAY') {
+						debugwarn ("Ignoring the HASHes in the Location line");
+						my $indexInLocation = 0;
+						# Take the first string in the line (ignoring all the HASHes)
+						while (ref($location->[$indexInLocation]) eq 'HASH') {
+							$indexInLocation ++;
+						}
+						$location = $location->[$indexInLocation];
 					}
-					if ($event->[1]->{RRULE}{'BYDAY'} ne '') {
-						# Compute the repeatweekflags from the days of week where the event occurs
-						if (ref($event->[1]->{RRULE}{'BYDAY'}) eq 'ARRAY') {
-							# There is more than one item in the list
-							my $i = 0;
-							while ((my $day_of_week = $event->[1]->{RRULE}->{BYDAY}[$i]) ne '') {
-								debug ("day_of_week=$day_of_week");
-								$repeatweekflags += repeatWeekFlagFromDayOfWeek ($day_of_week);
-								$i++;
+					$location = convertICalStringToHTMLNote ($location);
+					debug ("location=$location");
+
+					# Check if it's an all-day event
+					my $allday;
+					if ( getIcalParameter($event{DTSTART},'VALUE') eq "DATE" ) {
+						$allday = "true";
+					} else {
+						$allday = "false";
+					}
+					debug ("allday=$allday");
+
+					# Process repeat rules
+					# TODO probable fixes needed to implement the complete RFC
+					my $repeatrule = 0;
+					my $repeatfrequency = 1;
+					my $repeatenddate = undef;
+					my $repeatweekflags = 0;
+				
+					if(defined ($event{RRULE})){
+						my $icsfreq = getIcalParameter($event{RRULE}, 'FREQ');
+						my $icsuntil = getIcalParameter($event{RRULE}, 'UNTIL');
+						my $icscount = getIcalParameter($event{RRULE}, 'COUNT');
+						my $icsinterval = getIcalParameter($event{RRULE}, 'INTERVAL');
+						my $icsbyday = getIcalParameter($event{RRULE}, 'BYDAY');
+						debug("Found RRULE parameters from array :");
+						debug("icsfreq : $icsfreq");
+						debug("icsuntil : $icsuntil");
+						debug("icscount : $icscount");
+						debug("icsinterval : $icsinterval");
+						debug("icsbyday : $icsbyday");
+
+						if ($icsfreq ne '') {
+							$repeatrule = 1;
+							if ($icsfreq eq "DAILY") {
+								$repeatrule = 1;
 							}
-							debug ("repeatweekflags=$repeatweekflags");
-						}
-						else {
-							# There is only one item in the list
-							my $day_of_week = $event->[1]->{RRULE}->{BYDAY};
-							if ($day_of_week =~ m/[0-9]/) {
-								# Cases where the day of week is preceeded by a number (positive or negative)
-								if ($day_of_week =~ m/\-/) {
-									# The event must repeat every nth day of week from the end of every month
-									$repeatrule = 6;
-									debug("repeatrule=6");
+							elsif ($icsfreq eq "WEEKLY") {
+								$repeatrule = 2;
+							}
+							elsif ($icsfreq eq "MONTHLY") {
+								$repeatrule = 4;  # which can be replaced by 4 or 6 depending on the BYDAY value
+							}
+							elsif ($icsfreq eq "YEARLY") {
+								$repeatrule = 5;
+							}
+							debug ("frequency=".$icsfreq." => repeatrule=$repeatrule");
+							if ($icsuntil ne '') {
+								$repeatenddate = $icsuntil;
+								$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
+								debug ("repeatenddate=$repeatenddate");
+							}
+							elsif ($icscount ne '') {
+								my $count = $icscount;
+								# Compute the ical date corresponding to the start date
+								my $icaldate = DateTime::Format::ICal->parse_datetime(extractDateFromIcalLine($event{DTSTART},0));
+								my $icallastdateaftercount;
+								if ($repeatrule == 1) {
+									my $icalrec = DateTime::Event::ICal->recur(
+										dtstart => $icaldate,
+										freq => "daily",
+										count => $count
+									);
+									$icallastdateaftercount = $icalrec->max;
+								}
+								if ($repeatrule == 2) {
+									my $icalrec = DateTime::Event::ICal->recur(
+										dtstart => $icaldate,
+										freq => "weekly",
+										count => $count
+									);
+									$icallastdateaftercount = $icalrec->max;
+								}
+								if ($repeatrule == 4) {
+									my $icalrec = DateTime::Event::ICal->recur(
+										dtstart => $icaldate,
+										freq => "monthly",
+										count => $count
+									);
+									$icallastdateaftercount = $icalrec->max;
+								}
+								if ($repeatrule == 5) {
+									my $icalrec = DateTime::Event::ICal->recur(
+										dtstart => $icaldate,
+										freq => "yearly",
+										count => $count
+									);
+									$icallastdateaftercount = $icalrec->max;
+								}
+								$repeatenddate = DateTime::Format::ICal->format_datetime($icallastdateaftercount);
+								$repeatenddate =~ s/^(\d{4})(\d{2})(\d{2}).*/$1-$2-$3/ ;
+								debug ("count=$count => repeatenddate=$repeatenddate");
+							}
+							if ($icsinterval ne '') {
+								$repeatfrequency = $icsinterval;
+								debug ("repeatfrequency=$repeatfrequency");
+							}
+							if ($icsbyday ne '') {
+								# Compute the repeatweekflags from the days of week where the event occurs
+								if (ref($icsbyday) eq 'ARRAY') {
+									# There is more than one item in the list
+									my $i = 0;
+									my @byday = @$icsbyday;
+									while ((my $day_of_week = $byday[$i]) ne '') {
+										debug ("day_of_week=$day_of_week");
+										$repeatweekflags += repeatWeekFlagFromDayOfWeek ($day_of_week);
+										$i++;
+									}
+									debug ("repeatweekflags=$repeatweekflags");
 								}
 								else {
-									# The event must repeat every nth day of week of every month
-									$repeatrule = 3;
-									debug("repeatrule=3");
+									# There is only one item in the list
+									my $day_of_week = $icsbyday;
+									if ($day_of_week =~ m/[0-9]/) {
+										# Cases where the day of week is preceeded by a number (positive or negative)
+										if ($day_of_week =~ m/\-/) {
+											# The event must repeat every nth day of week from the end of every month
+											$repeatrule = 6;
+										}
+										else {
+											# The event must repeat every nth day of week of every month
+											if($icsfreq eq 'WEEKLY'){
+												$repeatrule = 3;
+											}elsif($icsfreq eq 'MONTHLY'){
+												$repeatrule = 4;
+											}elsif($icsfreq eq 'YEARLY'){
+												$repeatrule = 5;
+											}
+										}
+										debug("repeatrule=$repeatrule");
+									}
+									else {
+										# There is one simple day
+										$repeatweekflags = repeatWeekFlagFromDayOfWeek ($day_of_week);
+										debug ("day_of_week=$day_of_week => repeatweekflags=$repeatweekflags");
+									}
 								}
 							}
-							else {
-								# There is one simple day
-								$repeatweekflags = repeatWeekFlagFromDayOfWeek ($day_of_week);
-								debug ("day_of_week=$day_of_week => repeatweekflags=$repeatweekflags");
-							}
+						}
+					}#end if loop for RRULEs
+
+					# Process note : if there is one, we must create a specially encoded file with its content, and add a line in APPOINTMENTCUSTOM table
+					if ($notesDirectory ne '') {
+						my $note = $event{DESCRIPTION};
+						if (ref($note) eq 'ARRAY') {
+							# In case there is an unescaped comma in the string (that should not happen) : take the string before the comma
+							$note = $note->[0];
+						}
+						# TODO : add attendees to the description
+						if ($note ne '') {
+							# Use an encoding suitable for a QtMoko Note
+							$note = encode ("iso-8859-15",decode("utf8",$note));
+							$note = convertICalStringToHTMLNote ($note);
+							debug ("Create a note file for the description of appointment $recid");
+							createNoteFile ($recid,$note,$notesDirectory);
+							debug ("Insert the note link in the database");
+							$sthNote->execute($recid,'qdl-private-client-data','AAAAAQAAABAAZQBkAGkAdABuAG8AdABlAAAAAA==');
 						}
 					}
-				}
 
-				# Process note : if there is one, we must create a specially encoded file with its content, and add a line in APPOINTMENTCUSTOM table
-				if ($notesDirectory ne '') {
-					my $note = $event->[1]->{DESCRIPTION};
-					if (ref($note) eq 'ARRAY') {
-						# In case there is an unescaped comma in the string (that should not happen) : take the string before the comma
-						$note = $note->[0];
+					debug ("Insert the new appointment in the database");
+					# Insert new appointment
+					$sth->execute(
+						# Recid
+						$recid,
+						# Description
+						$description,
+						# Location
+						$location,
+						# Start date
+						$startDate,
+						# End date
+						$endDate,
+						# All day
+						$allday,
+						# Start timezone
+						$startDateTimeZone,
+						# End timezone
+						$endDateTimeZone,
+						# TODO : handle alarms
+						# Alarm
+						0,
+						# Alarmdelay
+						0,
+						# Repeat rule
+						$repeatrule,
+						# Repeat frequency
+						$repeatfrequency,
+						# Repeat End Date
+						$repeatenddate,
+						# Repeat week flags
+						$repeatweekflags,
+						# Context
+						2
+						);
+					if ($dbh->err()) { die "$DBI::errstr\n"; }
+
+					$recid++;
+
+					debug ("Appointment inserted");
+
+					# TODO : handle the category through the table APPOINTMENTCATEGORIES
+
+					# Commit every 100 events
+					if ($recid % 100 == 0) {
+						$dbh->commit();
+						debug ("elapsed for last 100 events=". (time - $time)." seconds");
+						$time = time;
 					}
-					# TODO : add attendees to the description
-					if ($note ne '') {
-						# Use an encoding suitable for a QtMoko Note
-						$note = encode ("iso-8859-15",decode("utf8",$note));
-						$note = convertICalStringToHTMLNote ($note);
-						debug ("Create a note file for the description of appointment $recid");
-						createNoteFile ($recid,$note,$notesDirectory);
-						debug ("Insert the note link in the database");
-						$sthNote->execute($recid,'qdl-private-client-data','AAAAAQAAABAAZQBkAGkAdABuAG8AdABlAAAAAA==');
-					}
-				}
+				}#end if condition which check that component is a VEVENT
 
-				debug ("Insert the new appointment in the database");
-				# Insert new appointment
-				$sth->execute(
-					# Recid
-					$recid,
-					# Description
-					$description,
-					# Location
-					$location,
-					# Start date
-					$startDate,
-					# End date
-					$endDate,
-					# All day
-					$allday,
-					# Start timezone
-					$startDateTimeZone,
-					# End timezone
-					$endDateTimeZone,
-					# TODO : handle alarms
-					# Alarm
-					0,
-					# Alarmdelay
-					0,
-					# Repeat rule
-					$repeatrule,
-					# Repeat frequency
-					$repeatfrequency,
-					# Repeat End Date
-					$repeatenddate,
-					# Repeat week flags
-					$repeatweekflags,
-					# Context
-					2
-					);
-				if ($dbh->err()) { die "$DBI::errstr\n"; }
-
-				$recid++;
-
-				debug ("Appointment inserted");
-
-				# TODO : handle the category through the table APPOINTMENTCATEGORIES
-
-				# Commit every 100 events
-				if ($recid % 100 == 0) {
-					$dbh->commit();
-					debug ("elapsed for last 100 events=". (time - $time)." seconds");
-					$time = time;
-				}
-			}
-		}
-		$indexInFile++;
-	}
-
+	}#end while loop to read all events
 	# Commit and close Qtopia database
 	$dbh->commit();
 	# Workaround to avoid warnings from $dbh->disconnect()
