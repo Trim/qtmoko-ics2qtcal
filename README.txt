@@ -19,7 +19,7 @@ Examples :
 - sync4ics2openmoko.sh -u 'myuser' -p 'mypassword' -s https://myserver/mypath/ myfile1 myfile2 myfile3 
 - sync4ics2openmoko.sh -u 'myuser' -p 'mypassword' -s https://myserver/ mypath1/myfile1 mypath1/myfile2 anotherpath/myfile3 
 
-Usage on a standard computer (tested on Ubuntu 10.04) : same steps, except that you need to use remotesync4ics2openmoko.sh instead
+Usage on a standard computer (tested on Ubuntu 10.04 and 12.04) : same steps, except that you need to use remotesync4ics2openmoko.sh instead
 
 ics2qtcal.pl is where the hard job is done. This script has several options and you can use it alone
 sync4ics2openmoko.sh and remotesync4ics2openmoko.sh automate the operations described above. They are targeted on my own usage, but you can modify them if you wish.
@@ -30,8 +30,7 @@ Original application from Mossroy : http://mossroy.free.fr/ics2qtcal/
 Some code inspired or copied from http://cpansearch.perl.org/src/BSDZ/Tie-iCal-0.14/samples/outlooksync.pl .
 The iCal RFC implementation (http://www.faqs.org/rfcs/rfc2445.html) is quite incomplete in this script, but it covers the most common options
 
-Please send any suggestion/bug report to mossroy.mossroy AT gmail DOT com or adrien AT adorsaz DOT ch
-You can give small donations through Flattr : https://flattr.com/thing/104780/ics2qtcal-Perl-script-to-synchronize-ics-files-with-QtMoko-calendar-on-a-FreeRunner
+Please send any suggestion/bug report to adrien AT adorsaz DOT ch or mossroy AT free FOT fr
 
 License :
 This program is free software: you can redistribute it and/or modify
