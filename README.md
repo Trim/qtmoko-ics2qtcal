@@ -29,7 +29,7 @@ The optional user/password is given to the HTTP server if it needs authenticatio
 - sync4ics2openmoko.sh -u 'myuser' -p 'mypassword' -s https://myserver/ mypath1/myfile1 mypath1/myfile2 anotherpath/myfile3 
 
 ### Usage on Desktop
-Usage on a standard computer (tested on Ubuntu 10.04) : same steps, except that you need to use remotesync4ics2openmoko.sh instead and connect your phone with IP 192.168.0.202.
+Usage on a standard computer (tested on Ubuntu 10.04 and 12.04) : same steps, except that you need to use remotesync4ics2openmoko.sh instead and connect your phone with IP 192.168.0.202.
 
 How does it work ?
 ------------------
@@ -48,8 +48,7 @@ Sources
 Suggestions/bugs
 ----------------
 
-Please send any suggestion/bug report to mossroy.mossroy AT gmail DOT com , adrien AT adorsaz DOT ch or use github tools
-You can give small donations through [our Flattr](https://flattr.com/thing/104780/ics2qtcal-Perl-script-to-synchronize-ics-files-with-QtMoko-calendar-on-a-FreeRunner)
+Please send any suggestion/bug report to adrien AT adorsaz DOT ch, mossroy AT free DOT fr, or use github tools
 
 License
 -------
