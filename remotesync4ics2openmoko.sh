@@ -54,9 +54,9 @@ echo "Transferring events to qtopia_db"
 for filename in ./*.ics
 do
     if [ -n "$verbose" ] ; then
-        ./ics2qtcal.sh -v "$filename" ${icaldb}
+        ics2qtcal.pl -- -v --ical "${filename}" --qtopiadb qtopia_db.sqlite --notesdirectory "$tmpnotes"
     else
-        ./ics2qtcal.sh "$filename" ${icaldb}
+        ics2qtcal.pl -- --ical "${filename}" --qtopiadb qtopia_db.sqlite --notesdirectory "$tmpnotes"
     fi
 done;
 
