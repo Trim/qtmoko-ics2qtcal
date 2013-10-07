@@ -1,3 +1,11 @@
+qtmoko-ics2qtcal (0.7.4-1) unstable; urgency=low
+
+  * Update from upstream and use gbp to build package
+  * Source code is on upstream branch
+  * Source code with debian dir is on master
+
+ -- Adrien Dorsaz <adrien@adorsaz.ch>  Mon, 07 Oct 2013 22:10:47 +0200
+
 qtmoko-ics2qtcal (0.7.3-1) unstable; urgency=low
 
   * Initial release
