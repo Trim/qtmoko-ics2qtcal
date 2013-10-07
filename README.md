@@ -26,8 +26,8 @@ In current version, it downloads one ore several .ics files through HTTP(S), and
 It also creates the Note files for each appointment description, in the directory where they are expected by QtMoko : /home/root/Applications/Annotator/
 
 ### Usage on QtMoko (tested on v52):
-- Copy all the files in a directory of your phone (you can use git clone if you've install git or [download zip file](https://www.adorsaz.ch/public/downloads/qtmoko-ics2qtcal/))
-- Install the necessary Perl packages by running install_dependencies.sh on the phone
+- Copy all the files in a directory of your phone (you can use git clone if you've install git, download zip file from github or [.deb package](https://redmine.adorsaz.ch/projects/ics2qtcal_/files))
+- Install the necessary Perl packages by running install_dependencies.sh on the phone, if you've taken source files
 - Run the script sync4ics2openmoko.sh [-u user] [-p password] [-s serverurl] fileurl1 fileurl2 ...
 
 The optional user/password is given to the HTTP server if it needs authentication
