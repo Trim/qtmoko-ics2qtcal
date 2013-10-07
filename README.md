@@ -9,6 +9,15 @@ It currently does not have any user-interface (but will have soon see Trim/getca
 
 We aren't expert in those languages : the code can probably be improved (suggestions and help are welcome!) and the ical RFC isn't completed (but feature demands and bug reports are welcome).
 
+Installation
+------------
+
+You can either :
+* clone the master branch from [github](https://github.com/Trim/qtmoko-ics2qtcal.git) or from git://adorsaz.ch/qtmoko-ics.git
+* download zip created for each tags/revisions
+* download and install [.deb packages](https://redmine.adorsaz.ch/projects/ics2qtcal_/files)
+* create and install .deb package by cloning master and debian branch and runing "gbp buildpackage"
+
 How can I use it ?
 ------------------
 
@@ -44,6 +53,11 @@ Sources
 * [Original application](http://mossroy.free.fr/ics2qtcal/) from Mossroy
 * Some code inspired or copied from [cpan](http://cpansearch.perl.org/src/BSDZ/Tie-iCal-0.14/samples/outlooksync.pl)
 * The [iCal RFC](http://www.faqs.org/rfcs/rfc2445.html) implementation is quite incomplete in this script, but it covers the most common options
+
+Developer notes
+---------------
+
+The qtmoko-ics work is done through the master branch and the debian stuff is located on the debian branch.
 
 Suggestions/bugs
 ----------------
