@@ -13,10 +13,10 @@ Installation
 ------------
 
 You can either :
-* clone the upstream branch from [github](https://github.com/Trim/qtmoko-ics2qtcal.git) or from git://adorsaz.ch/qtmoko-ics.git
+* clone the master branch from [github](https://github.com/Trim/qtmoko-ics2qtcal.git) or from git://adorsaz.ch/qtmoko-ics.git
 * download zip created for each tags/revisions
 * download and install [.deb packages](https://redmine.adorsaz.ch/projects/ics2qtcal_/files)
-* create and install .deb package by cloning master and upstream branch and runing "gbp buildpackage"
+* create and install .deb package by cloning master and debian branch and runing "gbp buildpackage"
 
 How can I use it ?
 ------------------
@@ -57,7 +57,7 @@ Sources
 Developer notes
 ---------------
 
-The qtmoko-ics work is done through the 'upstream' branch because the 'master' branch is kept to create .deb packages easily.
+The qtmoko-ics work is done through the master branch and the debian stuff is located on the debian branch.
 
 Suggestions/bugs
 ----------------
